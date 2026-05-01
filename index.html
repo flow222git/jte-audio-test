@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>練息場 | 音響測試工具</title>
+  <style>
+    :root {
+      --blue: #2b7de9;
+      --blue-dark: #1a5fc7;
+      --blue-light: #e8f1fd;
+      --blue-mid: #d0e4fa;
+      --yellow: #f5c842;
+      --green: #4caf7d;
+      --orange: #f07830;
+      --red: #e85050;
+      --text: #1d1d1f;
+      --text2: #6e6e73;
+      --text3: #aeaeb2;
+      --bg: #ffffff;
+      --bg2: #f5f5f7;
+      --border: rgba(0,0,0,0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', 'Noto Sans TC', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      background: var(--bg2);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .brand-header {
+      background: white;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo-mark { display: flex; align-items: center; gap: 10px; }
+    .logo-box {
+      width: 30px; height: 30px; border-radius: 8px;
+      background: var(--blue); color: white; font-size: 14px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-text { font-size: 15px; font-weight: 700; letter-spacing: -0.4px; }
+    .logo-sub { font-size: 10px; color: var(--text2); }
+    .header-meta { font-size: 11px; color: var(--text2); }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+    }
+
+    /* Hero */
+    .hero {
+      background: var(--blue);
+      color: white;
+      border-radius: 18px;
+      padding: 24px 22px;
+      margin-bottom: 20px;
+    }
+
+    .hero-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      opacity: 0.85;
+    }
+
+    .hero-title {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      line-height: 1.2;
+      margin-top: 6px;
+    }
+
+    .hero-sub {
+      font-size: 13px;
+      opacity: 0.85;
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    /* Card */
+    .card {
+      background: white;
+      border-radius: 18px;
+      padding: 22px 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .icon-circle {
+      width: 32px; height: 32px;
+      border-radius: 9px;
+      background: var(--blue-light);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .icon-circle .icon { width: 16px; height: 16px; stroke: var(--blue); }
+
+    /* Meter */
+    .meter-display {
+      background: linear-gradient(180deg, #0f1c2e 0%, #1a2f4a 100%);
+      border-radius: 14px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .meter-label {
+      color: rgba(255,255,255,0.7);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+    }
+
+    .meter-value {
+      color: white;
+      font-size: 44px;
+      font-weight: 700;
+      letter-spacing: -2px;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .meter-unit {
+      color: rgba(255,255,255,0.5);
+      font-size: 14px;
+      margin-left: 4px;
+      font-weight: 500;
+    }
+
+    .meter-status {
+      color: rgba(255,255,255,0.85);
+      font-size: 12px;
+      margin-top: 10px;
+    }
+
+    /* Spectrum */
+    .spectrum-canvas {
+      width: 100%;
+      height: 140px;
+      display: block;
+      background: #0f1c2e;
+      border-radius: 10px;
+    }
+
+    /* Big Button */
+    .big-btn {
+      width: 100%;
+      padding: 18px;
+      border: none;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      letter-spacing: -0.2px;
+      font-family: inherit;
+    }
+
+    .big-btn-primary { background: var(--blue); color: white; }
+    .big-btn-primary:hover:not(:disabled) { background: var(--blue-dark); }
+    .big-btn-primary:disabled { background: var(--text3); cursor: not-allowed; }
+
+    .big-btn-danger { background: var(--red); color: white; }
+    .big-btn-danger:hover { background: #c93e3e; }
+
+    .big-btn .icon { width: 20px; height: 20px; stroke: white; }
+
+    /* Test Progress */
+    .progress-wrap {
+      background: var(--bg2);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 12px;
+      display: none;
+    }
+
+    .progress-wrap.active { display: block; }
+
+    .progress-label {
+      font-size: 12px;
+      color: var(--text2);
+      letter-spacing: 1px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: white;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--blue) 0%, #5da8f5 100%);
+      width: 0%;
+      transition: width 0.3s;
+      border-radius: 4px;
+    }
+
+    .progress-text {
+      font-size: 13px;
+      color: var(--text);
+      margin-top: 8px;
+      font-weight: 500;
+    }
+
+    /* Results */
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .result-cell {
+      background: var(--bg2);
+      padding: 14px 10px;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .result-cell-label {
+      font-size: 10px;
+      color: var(--text2);
+      letter-spacing: 1px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .result-cell-value {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      margin-top: 4px;
+      color: var(--blue);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .result-cell-value.green { color: var(--green); }
+    .result-cell-value.yellow { color: #c49a00; }
+    .result-cell-value.red { color: var(--red); }
+
+    .result-cell-detail {
+      font-size: 10px;
+      color: var(--text2);
+      margin-top: 2px;
+    }
+
+    /* Score */
+    .score-display {
+      text-align: center;
+      padding: 24px 0 20px;
+      background: var(--blue-light);
+      border-radius: 14px;
+      margin-bottom: 16px;
+    }
+
+    .score-label {
+      font-size: 11px;
+      color: var(--blue);
+      letter-spacing: 2px;
+      font-weight: 700;
+    }
+
+    .score-number {
+      font-size: 64px;
+      font-weight: 700;
+      letter-spacing: -3px;
+      color: var(--blue);
+      line-height: 1;
+      margin-top: 4px;
+    }
+
+    .score-suffix {
+      font-size: 24px;
+      color: var(--blue);
+      opacity: 0.6;
+      font-weight: 500;
+    }
+
+    .score-grade {
+      font-size: 15px;
+      color: var(--text);
+      margin-top: 8px;
+      font-weight: 600;
+    }
+
+    /* Diagnosis Items */
+    .diag-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .diag-item {
+      padding: 14px;
+      background: var(--bg2);
+      border-radius: 12px;
+      border-left: 4px solid var(--blue);
+    }
+
+    .diag-item.warning { border-left-color: var(--yellow); }
+    .diag-item.severe { border-left-color: var(--red); }
+    .diag-item.good { border-left-color: var(--green); }
+
+    .diag-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+
+    .diag-desc {
+      font-size: 13px;
+      color: var(--text2);
+      margin-top: 5px;
+      line-height: 1.55;
+    }
+
+    /* Notice */
+    .notice {
+      background: var(--blue-light);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 12px;
+      color: var(--text);
+      display: flex;
+      gap: 9px;
+      align-items: flex-start;
+      line-height: 1.5;
+      margin-bottom: 14px;
+    }
+
+    .notice .icon { width: 16px; height: 16px; stroke: var(--blue); flex-shrink: 0; margin-top: 1px; }
+
+    /* Hidden */
+    .hidden { display: none !important; }
+
+    /* Permission */
+    .perm-card {
+      text-align: center;
+      padding: 32px 20px;
+    }
+
+    .perm-icon {
+      width: 64px; height: 64px;
+      border-radius: 16px;
+      background: var(--blue-light);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+    }
+
+    .perm-icon .icon { width: 30px; height: 30px; stroke: var(--blue); }
+
+    .perm-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      margin-bottom: 8px;
+    }
+
+    .perm-desc {
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+
+    /* Error */
+    .error-msg {
+      background: rgba(232,80,80,0.08);
+      border-left: 4px solid var(--red);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: var(--red);
+      margin-top: 12px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="brand-header">
+    <div class="logo-mark">
+      <div class="logo-box">練</div>
+      <div>
+        <div class="logo-text">練息場</div>
+        <div class="logo-sub">Join to Enjoy</div>
+      </div>
+    </div>
+    <div class="header-meta">音響測試 v0.1</div>
+  </div>
+
+  <div class="container">
+
+    <div class="hero">
+      <div class="hero-label">ACOUSTIC TEST · MVP</div>
+      <h1 class="hero-title">音響聲學測試</h1>
+      <p class="hero-sub">用手機麥克風測量你的聆聽空間,30 秒內給你低中高頻評分與調整建議。</p>
+    </div>
+
+    <!-- 步驟 1: 權限請求 (初始畫面) -->
+    <div class="card perm-card" id="permCard">
+      <div class="perm-icon">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>
+        </svg>
+      </div>
+      <div class="perm-title">需要麥克風權限</div>
+      <div class="perm-desc">這個工具會用手機麥克風收音來分析音響表現。<br>不會錄音、不會傳到任何地方,純本機分析。</div>
+      <button class="big-btn big-btn-primary" id="btnPermission">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+        </svg>
+        允許麥克風並開始
+      </button>
+      <div class="error-msg hidden" id="permError"></div>
+    </div>
+
+    <!-- 步驟 2: 收音中 + 測試準備 (權限後) -->
+    <div class="card hidden" id="readyCard">
+      <div class="card-title">
+        <div class="icon-circle">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>
+          </svg>
+        </div>
+        即時收音狀態
+      </div>
+
+      <div class="meter-display">
+        <div class="meter-label">環境音量</div>
+        <div class="meter-value" id="liveLevel">--<span class="meter-unit">dB</span></div>
+        <div class="meter-status" id="liveStatus">正在初始化麥克風...</div>
+      </div>
+
+      <canvas class="spectrum-canvas" id="spectrumCanvas"></canvas>
+
+      <div class="notice" style="margin-top: 14px;">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 16v-4M12 8h.01"/>
+        </svg>
+        <div>
+          <strong>測試前請確認:</strong><br>
+          ① 手機放在你聆聽位置(沙發/辦公椅)<br>
+          ② 音量調到平常聽音樂的大小<br>
+          ③ 環境保持安靜(關冷氣、關電視)<br>
+          ④ 點下方按鈕後,30 秒內音響會播出粉紅噪音
+        </div>
+      </div>
+
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-label">測試中</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text" id="progressText">00:30</div>
+      </div>
+
+      <button class="big-btn big-btn-primary" id="btnStart">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="5 3 19 12 5 21 5 3"/>
+        </svg>
+        開始 30 秒測試
+      </button>
+    </div>
+
+    <!-- 步驟 3: 結果 -->
+    <div class="card hidden" id="resultCard">
+      <div class="card-title">
+        <div class="icon-circle">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h2l3-9 4 18 3-9 2 6h4"/>
+          </svg>
+        </div>
+        測試結果
+      </div>
+
+      <div class="score-display">
+        <div class="score-label">綜合評分</div>
+        <div>
+          <span class="score-number" id="scoreNum">--</span><span class="score-suffix">/100</span>
+        </div>
+        <div class="score-grade" id="scoreGrade">--</div>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-cell">
+          <div class="result-cell-label">低頻</div>
+          <div class="result-cell-value" id="bassValue">--</div>
+          <div class="result-cell-detail">20-250 Hz</div>
+        </div>
+        <div class="result-cell">
+          <div class="result-cell-label">中頻</div>
+          <div class="result-cell-value" id="midValue">--</div>
+          <div class="result-cell-detail">250-4k Hz</div>
+        </div>
+        <div class="result-cell">
+          <div class="result-cell-label">高頻</div>
+          <div class="result-cell-value" id="trebleValue">--</div>
+          <div class="result-cell-detail">4k-20k Hz</div>
+        </div>
+      </div>
+
+      <div class="card-title" style="font-size: 14px; margin-top: 8px;">
+        <div class="icon-circle">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 11H5a2 2 0 0 0-2 2v7h18v-7a2 2 0 0 0-2-2h-4"/>
+            <path d="M9 11V5a3 3 0 0 1 6 0v6"/>
+            <circle cx="12" cy="15" r="1"/>
+          </svg>
+        </div>
+        診斷與建議
+      </div>
+
+      <div class="diag-list" id="diagList"></div>
+
+      <button class="big-btn big-btn-primary" id="btnRetest" style="margin-top: 16px;">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+          <polyline points="3 3 3 8 8 8"/>
+        </svg>
+        重新測試
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    // ========== 全域狀態 ==========
+    let audioCtx = null;
+    let analyser = null;
+    let micStream = null;
+    let pinkNoiseNode = null;
+    let pinkNoiseGain = null;
+    let animationId = null;
+    let testRunning = false;
+    let collectedSpectrum = []; // 測試期間蒐集的頻譜資料
+
+    // ========== DOM 元素 ==========
+    const permCard = document.getElementById('permCard');
+    const readyCard = document.getElementById('readyCard');
+    const resultCard = document.getElementById('resultCard');
+    const btnPermission = document.getElementById('btnPermission');
+    const btnStart = document.getElementById('btnStart');
+    const btnRetest = document.getElementById('btnRetest');
+    const permError = document.getElementById('permError');
+    const liveLevel = document.getElementById('liveLevel');
+    const liveStatus = document.getElementById('liveStatus');
+    const spectrumCanvas = document.getElementById('spectrumCanvas');
+    const progressWrap = document.getElementById('progressWrap');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+
+    // ========== 取得麥克風權限 ==========
+    btnPermission.addEventListener('click', async () => {
+      try {
+        permError.classList.add('hidden');
+        btnPermission.disabled = true;
+        btnPermission.innerHTML = '<span>請求權限中...</span>';
+
+        // 取得麥克風
+        micStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false
+          }
+        });
+
+        // 建立 AudioContext
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') {
+          await audioCtx.resume();
+        }
+
+        // 接上分析器
+        const source = audioCtx.createMediaStreamSource(micStream);
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 4096;
+        analyser.smoothingTimeConstant = 0.7;
+        source.connect(analyser);
+
+        // 切換畫面
+        permCard.classList.add('hidden');
+        readyCard.classList.remove('hidden');
+        liveStatus.textContent = '麥克風已啟用,等待測試開始';
+
+        // 開始即時顯示
+        startLiveDisplay();
+      } catch (err) {
+        btnPermission.disabled = false;
+        btnPermission.innerHTML = `
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          </svg>
+          <span>允許麥克風並開始</span>
+        `;
+        permError.classList.remove('hidden');
+        if (err.name === 'NotAllowedError') {
+          permError.textContent = '⚠️ 麥克風權限被拒絕。請到瀏覽器設定中開啟麥克風權限,或使用 HTTPS 網址重試。';
+        } else if (err.name === 'NotFoundError') {
+          permError.textContent = '⚠️ 找不到麥克風裝置。';
+        } else {
+          permError.textContent = '⚠️ 錯誤:' + err.message;
+        }
+      }
+    });
+
+    // ========== 即時頻譜與電平顯示 ==========
+    function startLiveDisplay() {
+      const ctx = spectrumCanvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const resize = () => {
+        const rect = spectrumCanvas.getBoundingClientRect();
+        spectrumCanvas.width = rect.width * dpr;
+        spectrumCanvas.height = rect.height * dpr;
+      };
+      resize();
+      window.addEventListener('resize', resize);
+
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      const sampleRate = audioCtx.sampleRate;
+
+      function draw() {
+        animationId = requestAnimationFrame(draw);
+        analyser.getByteFrequencyData(dataArray);
+
+        // === 計算 dB 電平 ===
+        let sum = 0;
+        for (let i = 0; i < bufferLength; i++) sum += dataArray[i];
+        const avg = sum / bufferLength;
+        const db = avg > 0 ? Math.round(20 * Math.log10(avg / 255) - 6) : -100;
+        const displayDb = Math.max(-90, Math.min(0, db));
+        liveLevel.innerHTML = displayDb + '<span class="meter-unit">dB</span>';
+
+        // === 環境噪音判斷 ===
+        if (!testRunning) {
+          if (displayDb < -50) liveStatus.textContent = '環境安靜 ✓ 適合測試';
+          else if (displayDb < -35) liveStatus.textContent = '有些背景噪音,可以接受';
+          else liveStatus.textContent = '⚠️ 環境太吵,建議找安靜處';
+        }
+
+        // === 蒐集測試期間資料 ===
+        if (testRunning) {
+          collectedSpectrum.push(new Uint8Array(dataArray));
+        }
+
+        // === 繪製頻譜瀑布圖 ===
+        const w = spectrumCanvas.width;
+        const h = spectrumCanvas.height;
+        ctx.clearRect(0, 0, w, h);
+
+        // 將 bufferLength 對應到頻率,只取 20Hz - 20kHz 範圍
+        const minFreq = 20;
+        const maxFreq = 20000;
+        const minLog = Math.log10(minFreq);
+        const maxLog = Math.log10(maxFreq);
+        const bars = 64;
+
+        for (let i = 0; i < bars; i++) {
+          // 對數頻率分布
+          const t = i / bars;
+          const freq = Math.pow(10, minLog + t * (maxLog - minLog));
+          const binIndex = Math.round(freq / sampleRate * 2 * bufferLength);
+
+          // 取附近 bins 平均
+          let val = 0, count = 0;
+          const range = Math.max(1, Math.floor(bufferLength / bars / 4));
+          for (let j = -range; j <= range; j++) {
+            const idx = binIndex + j;
+            if (idx >= 0 && idx < bufferLength) {
+              val += dataArray[idx];
+              count++;
+            }
+          }
+          val = count > 0 ? val / count : 0;
+
+          const barH = (val / 255) * h * 0.9;
+          const x = (i / bars) * w;
+          const barW = w / bars;
+
+          // 漸層色
+          const grad = ctx.createLinearGradient(0, h - barH, 0, h);
+          grad.addColorStop(0, '#5da8f5');
+          grad.addColorStop(0.5, '#2b7de9');
+          grad.addColorStop(1, '#1a5fc7');
+          ctx.fillStyle = grad;
+          ctx.fillRect(x + 1, h - barH, barW - 2, barH);
+        }
+      }
+      draw();
+    }
+
+    // ========== 開始測試 ==========
+    btnStart.addEventListener('click', async () => {
+      if (testRunning) return;
+      testRunning = true;
+      collectedSpectrum = [];
+
+      btnStart.disabled = true;
+      btnStart.classList.add('hidden');
+      progressWrap.classList.add('active');
+
+      // 播放粉紅噪音
+      startPinkNoise();
+      liveStatus.textContent = '測試進行中,請保持安靜';
+
+      // 倒數計時
+      const totalMs = 30000;
+      const startTime = Date.now();
+      const timer = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const remaining = Math.max(0, totalMs - elapsed);
+        const pct = (elapsed / totalMs) * 100;
+        progressFill.style.width = Math.min(100, pct) + '%';
+        const sec = Math.ceil(remaining / 1000);
+        progressText.textContent = '00:' + String(sec).padStart(2, '0') + ' 剩餘';
+
+        if (elapsed >= totalMs) {
+          clearInterval(timer);
+          finishTest();
+        }
+      }, 100);
+    });
+
+    // ========== 粉紅噪音產生器 ==========
+    function startPinkNoise() {
+      // 用 ScriptProcessor 產生粉紅噪音 (Paul Kellet's algorithm)
+      const bufferSize = 4096;
+      pinkNoiseNode = audioCtx.createScriptProcessor(bufferSize, 1, 1);
+
+      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+      pinkNoiseNode.onaudioprocess = (e) => {
+        const output = e.outputBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          b0 = 0.99886 * b0 + white * 0.0555179;
+          b1 = 0.99332 * b1 + white * 0.0750759;
+          b2 = 0.96900 * b2 + white * 0.1538520;
+          b3 = 0.86650 * b3 + white * 0.3104856;
+          b4 = 0.55000 * b4 + white * 0.5329522;
+          b5 = -0.7616 * b5 - white * 0.0168980;
+          output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11;
+          b6 = white * 0.115926;
+        }
+      };
+
+      pinkNoiseGain = audioCtx.createGain();
+      pinkNoiseGain.gain.value = 0.25;
+      pinkNoiseNode.connect(pinkNoiseGain);
+      pinkNoiseGain.connect(audioCtx.destination);
+    }
+
+    function stopPinkNoise() {
+      if (pinkNoiseNode) {
+        pinkNoiseNode.disconnect();
+        pinkNoiseGain.disconnect();
+        pinkNoiseNode = null;
+        pinkNoiseGain = null;
+      }
+    }
+
+    // ========== 測試完成 → 分析 ==========
+    function finishTest() {
+      testRunning = false;
+      stopPinkNoise();
+      progressWrap.classList.remove('active');
+      progressFill.style.width = '0%';
+
+      // 平均頻譜
+      const bufferLength = analyser.frequencyBinCount;
+      const sampleRate = audioCtx.sampleRate;
+      const avgSpectrum = new Float32Array(bufferLength);
+
+      // 跳過前 1 秒(避免播放剛開始的雜訊)
+      const skipFrames = Math.floor(collectedSpectrum.length * 0.1);
+      const validFrames = collectedSpectrum.slice(skipFrames);
+
+      for (const frame of validFrames) {
+        for (let i = 0; i < bufferLength; i++) {
+          avgSpectrum[i] += frame[i];
+        }
+      }
+      for (let i = 0; i < bufferLength; i++) {
+        avgSpectrum[i] /= validFrames.length;
+      }
+
+      // 計算各頻段平均能量 (dB)
+      function bandEnergy(minHz, maxHz) {
+        const minBin = Math.floor(minHz / sampleRate * 2 * bufferLength);
+        const maxBin = Math.ceil(maxHz / sampleRate * 2 * bufferLength);
+        let sum = 0, count = 0;
+        for (let i = minBin; i <= maxBin && i < bufferLength; i++) {
+          sum += avgSpectrum[i];
+          count++;
+        }
+        return count > 0 ? sum / count : 0;
+      }
+
+      const bassEnergy = bandEnergy(20, 250);
+      const midEnergy = bandEnergy(250, 4000);
+      const trebleEnergy = bandEnergy(4000, 16000);
+
+      // 換算成 dB (相對值,以中頻為參考)
+      const bassDb = energyToDb(bassEnergy, midEnergy);
+      const midDb = 0; // 參考點
+      const trebleDb = energyToDb(trebleEnergy, midEnergy);
+
+      showResults(bassDb, midDb, trebleDb);
+    }
+
+    function energyToDb(val, ref) {
+      if (val <= 0 || ref <= 0) return -30;
+      return Math.round(20 * Math.log10(val / ref) * 10) / 10;
+    }
+
+    // ========== 顯示結果 ==========
+    function showResults(bass, mid, treble) {
+      readyCard.classList.add('hidden');
+      resultCard.classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // 顯示數值
+      document.getElementById('bassValue').textContent = (bass >= 0 ? '+' : '') + bass.toFixed(1) + 'dB';
+      document.getElementById('midValue').textContent = '0.0dB';
+      document.getElementById('trebleValue').textContent = (treble >= 0 ? '+' : '') + treble.toFixed(1) + 'dB';
+
+      // 套色 (理想是 ±3dB 內)
+      colorize('bassValue', bass);
+      colorize('trebleValue', treble);
+      document.getElementById('midValue').classList.add('green');
+
+      // 計算評分 (理想範圍 -3 ~ +3 dB)
+      const bassDeviation = Math.abs(bass);
+      const trebleDeviation = Math.abs(treble);
+      const totalDeviation = bassDeviation + trebleDeviation;
+      let score = Math.max(0, Math.round(100 - totalDeviation * 4));
+      if (score > 100) score = 100;
+
+      document.getElementById('scoreNum').textContent = score;
+
+      let grade = '';
+      if (score >= 85) grade = '優秀 · 你的空間表現很好';
+      else if (score >= 70) grade = '良好 · 有小幅改善空間';
+      else if (score >= 55) grade = '中等 · 建議調整擺位';
+      else if (score >= 40) grade = '偏弱 · 空間問題明顯';
+      else grade = '需改善 · 建議認真調整';
+      document.getElementById('scoreGrade').textContent = grade;
+
+      // 產生診斷
+      generateDiagnosis(bass, treble);
+    }
+
+    function colorize(id, db) {
+      const el = document.getElementById(id);
+      el.classList.remove('green', 'yellow', 'red');
+      const abs = Math.abs(db);
+      if (abs <= 3) el.classList.add('green');
+      else if (abs <= 6) el.classList.add('yellow');
+      else el.classList.add('red');
+    }
+
+    function generateDiagnosis(bass, treble) {
+      const list = document.getElementById('diagList');
+      list.innerHTML = '';
+      const items = [];
+
+      // 低頻診斷
+      if (bass > 6) {
+        items.push({
+          type: 'severe',
+          title: '低頻過量 (+' + bass.toFixed(1) + 'dB)',
+          desc: '貝斯會糊、人聲會悶,空間有「轟」的感覺。建議:音響後方離牆至少 30cm,避免靠角落放置。'
+        });
+      } else if (bass > 3) {
+        items.push({
+          type: 'warning',
+          title: '低頻略多 (+' + bass.toFixed(1) + 'dB)',
+          desc: '低頻有些堆積但還可接受。建議:音響稍微離牆,或聆聽位置往前移一點。'
+        });
+      } else if (bass < -6) {
+        items.push({
+          type: 'severe',
+          title: '低頻不足 (' + bass.toFixed(1) + 'dB)',
+          desc: '貝斯薄、缺乏厚度感。可能是音響太小、離牆太遠,或聆聽位置剛好在駐波節點。建議:聆聽位置或音響位置調整 30-50cm 試試。'
+        });
+      } else if (bass < -3) {
+        items.push({
+          type: 'warning',
+          title: '低頻略弱 (' + bass.toFixed(1) + 'dB)',
+          desc: '低頻略顯薄弱。可以試著把音響稍微靠牆,或在音響下方加實心墊高物。'
+        });
+      } else {
+        items.push({
+          type: 'good',
+          title: '低頻表現良好',
+          desc: '低頻起伏在 ±3dB 內,貝斯與人聲胸腔共鳴會自然清晰。'
+        });
+      }
+
+      // 高頻診斷
+      if (treble < -10) {
+        items.push({
+          type: 'severe',
+          title: '高頻嚴重不足 (' + treble.toFixed(1) + 'dB)',
+          desc: '空氣感、細節嚴重缺失,音樂聽起來悶悶的。建議:確認高音單體角度對準耳朵、減少房間吸音材(厚地毯、布沙發)。'
+        });
+      } else if (treble < -5) {
+        items.push({
+          type: 'warning',
+          title: '高頻略暗 (' + treble.toFixed(1) + 'dB)',
+          desc: '高頻細節稍弱但不嚴重。建議:音響擺正,讓高音單體與耳朵同高、正面朝向你。'
+        });
+      } else if (treble > 5) {
+        items.push({
+          type: 'warning',
+          title: '高頻略亮 (+' + treble.toFixed(1) + 'dB)',
+          desc: '高頻偏刺耳,長時間聽會疲勞。建議:音響不要直接面對你(可以微微內傾但不要直射),或在前牆加軟質吸音材。'
+        });
+      } else {
+        items.push({
+          type: 'good',
+          title: '高頻表現良好',
+          desc: '高頻在合理範圍內,細節與空氣感應該足夠。'
+        });
+      }
+
+      // 渲染
+      items.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'diag-item ' + item.type;
+        div.innerHTML = `
+          <div class="diag-title">${item.title}</div>
+          <div class="diag-desc">${item.desc}</div>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    // ========== 重新測試 ==========
+    btnRetest.addEventListener('click', () => {
+      resultCard.classList.add('hidden');
+      readyCard.classList.remove('hidden');
+      btnStart.classList.remove('hidden');
+      btnStart.disabled = false;
+      progressFill.style.width = '0%';
+      progressText.textContent = '00:30';
+    });
+
+  </script>
+</body>
+</html>
