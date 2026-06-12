@@ -1269,6 +1269,17 @@
     return actions[category] || actions.general;
   }
 
+  function toneActionPlain(tone) {
+    const actions = {
+      "順勢推進": "目前條件能接住下一步，適合主動推進；重點是守住節奏，不要因順而過度用力。",
+      "小步推進": "條件大致可用，但還不到全面放大的程度；先用小步試探，把可行處落地。",
+      "先定主線": "局勢還沒有明顯偏向，先不要急著判成敗；把角色、目標和先後順序定清楚，判斷會穩很多。",
+      "先補條件": "現在不是完全不能做，而是支撐力還不足；先補資源、文件、溝通或時機，再談推進。",
+      "暫緩避險": "目前壓力和破口偏重，不適合硬衝；先止損、降風險，等條件回穩再動。"
+    };
+    return actions[tone] || "先把有利條件與受阻位置分開看，再決定下一步要推進、補強或暫緩。";
+  }
+
   function timePositionPlain(timeContext) {
     const context = timeContext || buildTimeContext();
     if (!context.enabled) return "尚未放入月建、日辰或時辰，所以只能看卦內結構，不能判斷當下時間氣候的助力。";
@@ -1290,7 +1301,7 @@
     const strongest = judgement.strengths.length ? judgement.strengths.map((dimension) => `${dimension.label}${dimension.status}`).join("、") : "可用力量不算明顯";
     const weakest = judgement.risks.length ? judgement.risks.map((dimension) => `${dimension.label}${dimension.status}`).join("、") : "沒有特別尖銳的阻點";
     const items = [
-      `最後歸納｜${title}屬於「${transition}」的局。以${judgement.categoryName}來看，整體判斷是「${judgement.tone}」；白話說，這不是單純吉凶，而是看目前條件能不能支撐下一步。`,
+      `最後歸納｜${title}屬於「${transition}」的局。以${judgement.categoryName}來看，整體判斷是「${judgement.tone}」。${toneActionPlain(judgement.tone)}`,
       `所在位置｜此卦在${reading.palace.palace}宮${reading.palace.generation}，卦宮五行屬${reading.palace.palaceElement}。${GENERATION_MEANINGS[reading.palace.generation]}${timePositionPlain(timeContext)}`,
       `優點｜${advantagePlain(reading)}目前較可用的向度是：${strongest}。`,
       `需要注意｜${riskPlain(reading, category)}換成向度來看，較需要補強的是：${weakest}。`,

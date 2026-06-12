@@ -394,8 +394,33 @@
     return "tone-neutral";
   }
 
-  function meterWidth(score) {
-    return `${Math.round(((Math.max(-3, Math.min(3, score)) + 3) / 6) * 100)}%`;
+  function signalForScore(score) {
+    if (score >= 2) {
+      return { className: "signal-good", light: "綠燈", action: "推進" };
+    }
+    if (score >= 1) {
+      return { className: "signal-okay", light: "綠燈", action: "小步" };
+    }
+    if (score <= -2) {
+      return { className: "signal-risk", light: "紅燈", action: "避險" };
+    }
+    if (score <= -1) {
+      return { className: "signal-caution", light: "黃燈", action: "補強" };
+    }
+    return { className: "signal-neutral", light: "黃燈", action: "釐清" };
+  }
+
+  function signalHtml(score, compact = false) {
+    const signal = signalForScore(score);
+    return `
+      <span class="signal-pill ${signal.className}${compact ? " compact" : ""}" aria-label="${signal.light}${signal.action}">
+        <i></i>
+        <span>
+          <b>${signal.light}</b>
+          <small>${signal.action}</small>
+        </span>
+      </span>
+    `;
   }
 
   function shortText(value, limit = 72) {
@@ -414,6 +439,7 @@
     }).find((section) => section.title === "總結");
     const strengths = judgement.strengths.length ? judgement.strengths.map((item) => item.label).join("、") : "暫無明顯順勢點";
     const risks = judgement.risks.length ? judgement.risks.map((item) => item.label).join("、") : "暫無明顯受阻點";
+    const overallSignal = signalHtml(judgement.score, true);
     return `
       <section class="reading-overview">
         <div class="overview-head">
@@ -425,6 +451,7 @@
           <div class="overview-seal ${toneClass(judgement.tone)}">
             <span>${escapeHtml(judgement.categoryName)}</span>
             <strong>${escapeHtml(judgement.tone)}</strong>
+            ${overallSignal}
           </div>
         </div>
 
@@ -453,7 +480,7 @@
                   <b>${escapeHtml(dimension.label)}</b>
                   <small>${escapeHtml(dimension.status)}</small>
                 </span>
-                <span class="dimension-meter" aria-hidden="true"><i style="width: ${meterWidth(dimension.score)}"></i></span>
+                ${signalHtml(dimension.score)}
               </summary>
               <p>${escapeHtml(dimension.summary)}</p>
               <p><b>作法</b>${escapeHtml(dimension.advice)}</p>

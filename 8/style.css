@@ -695,6 +695,11 @@ button:focus-visible {
   line-height: 1.18;
 }
 
+.overview-seal .signal-pill {
+  justify-self: start;
+  margin-top: 8px;
+}
+
 .insight-strip {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -768,7 +773,7 @@ button:focus-visible {
 
 .dimension-card summary {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 10px;
   min-height: 112px;
   align-items: start;
@@ -804,21 +809,84 @@ button:focus-visible {
   font-weight: 700;
 }
 
-.dimension-meter {
-  grid-column: 1 / -1;
-  display: block;
-  width: 100%;
-  height: 7px;
-  overflow: hidden;
+.signal-pill {
+  display: inline-grid;
+  grid-template-columns: 12px auto;
+  align-items: center;
+  gap: 7px;
+  min-width: 74px;
+  padding: 6px 8px;
+  border: 1px solid rgba(216, 205, 188, 0.88);
   border-radius: 999px;
-  background: rgba(216, 205, 188, 0.72);
+  background: rgba(255, 253, 246, 0.78);
+  white-space: nowrap;
 }
 
-.dimension-meter i {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--pine);
+.signal-pill i {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 3px rgba(255, 253, 246, 0.74), 0 0 0 4px rgba(53, 97, 79, 0.08);
+}
+
+.signal-pill span {
+  display: grid;
+  gap: 1px;
+}
+
+.signal-pill b {
+  color: var(--pine-dark);
+  font-size: 0.76rem;
+  line-height: 1;
+}
+
+.signal-pill small {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.signal-pill.compact {
+  min-width: 0;
+}
+
+.signal-good {
+  border-color: rgba(53, 125, 77, 0.34);
+  background: rgba(53, 125, 77, 0.11);
+}
+
+.signal-good i {
+  background: #357d4d;
+}
+
+.signal-okay {
+  border-color: rgba(93, 131, 67, 0.32);
+  background: rgba(93, 131, 67, 0.1);
+}
+
+.signal-okay i {
+  background: #5d8343;
+}
+
+.signal-neutral,
+.signal-caution {
+  border-color: rgba(169, 130, 59, 0.36);
+  background: rgba(169, 130, 59, 0.12);
+}
+
+.signal-neutral i,
+.signal-caution i {
+  background: #b88b32;
+}
+
+.signal-risk {
+  border-color: rgba(157, 75, 52, 0.36);
+  background: rgba(157, 75, 52, 0.12);
+}
+
+.signal-risk i {
+  background: var(--cinnabar);
 }
 
 .dimension-card p {
@@ -841,22 +909,18 @@ button:focus-visible {
   border-color: rgba(53, 97, 79, 0.42);
 }
 
-.tone-good .dimension-meter i,
 .tone-good.overview-seal {
   background: rgba(53, 97, 79, 0.15);
 }
 
-.tone-okay .dimension-meter i,
 .tone-okay.overview-seal {
   background: rgba(111, 127, 79, 0.22);
 }
 
-.tone-neutral .dimension-meter i,
 .tone-neutral.overview-seal {
   background: rgba(80, 111, 118, 0.18);
 }
 
-.tone-caution .dimension-meter i,
 .tone-caution.overview-seal {
   background: rgba(169, 130, 59, 0.2);
 }
@@ -865,7 +929,6 @@ button:focus-visible {
   border-color: rgba(157, 75, 52, 0.34);
 }
 
-.tone-risk .dimension-meter i,
 .tone-risk.overview-seal {
   background: rgba(157, 75, 52, 0.18);
 }
