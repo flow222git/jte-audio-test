@@ -42,12 +42,40 @@
           </select>
         </label>
 
+        <section class="question-seeds" aria-label="問法模板">
+          <h2>問法模板</h2>
+          <div id="questionPrompts" class="question-prompts"></div>
+        </section>
+
         <div class="button-row">
           <button id="cast" class="primary" type="button">三錢起卦</button>
           <button id="readManual" type="button">套用手動六爻</button>
         </div>
 
         <p class="input-help">三錢起卦會隨機擲出六爻；手動六爻則使用下方 6、7、8、9 的設定重新算出卦盤。</p>
+
+        <section class="time-settings" aria-label="進階時空設定">
+          <h2>進階時空</h2>
+          <p>若你知道起卦當下的月建、日辰與時辰，可在這裡填入；工具會加入六神、空亡、月破日破與時空旺衰提示。</p>
+          <button id="autoTime" type="button">用本機時間自動填入</button>
+          <p id="timeAutoNote" class="time-note">日辰依本機公曆日期換算，不需要連網；若採子初換日或遇節氣交界，請手動核對。</p>
+          <label class="field compact">
+            <span>起卦日期</span>
+            <input id="castDate" type="date">
+          </label>
+          <label class="field compact">
+            <span>月建</span>
+            <select id="monthBranch"></select>
+          </label>
+          <label class="field compact">
+            <span>日辰</span>
+            <select id="dayGanzhi"></select>
+          </label>
+          <label class="field compact">
+            <span>時辰</span>
+            <select id="hourBranch"></select>
+          </label>
+        </section>
 
         <div class="manual-lines" id="manualLines" aria-label="手動六爻"></div>
       </aside>
@@ -88,6 +116,7 @@
         <nav class="tabs" aria-label="結果分頁">
           <button class="tab active" data-tab="reading" type="button">解讀</button>
           <button class="tab" data-tab="lines" type="button">爻表</button>
+          <button class="tab" data-tab="advanced" type="button">時空</button>
           <button class="tab" data-tab="hidden" type="button">飛伏</button>
           <button class="tab" data-tab="palaces" type="button">八宮</button>
           <button class="tab" data-tab="model" type="button">模型</button>
@@ -107,10 +136,32 @@
                   <th>納甲</th>
                   <th>五行</th>
                   <th>六親</th>
+                  <th>六神</th>
+                  <th>時空</th>
                   <th>標記</th>
                 </tr>
               </thead>
               <tbody id="lineTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="advancedTab">
+          <div id="advancedSummary" class="hidden-summary"></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>爻位</th>
+                  <th>六親</th>
+                  <th>月建</th>
+                  <th>日辰</th>
+                  <th>時辰</th>
+                  <th>空亡</th>
+                  <th>旺衰</th>
+                </tr>
+              </thead>
+              <tbody id="advancedTable"></tbody>
             </table>
           </div>
         </section>

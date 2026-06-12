@@ -120,6 +120,51 @@
     "亥": "水", "子": "水"
   };
 
+  const STEMS = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"];
+  const BRANCHES = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
+  const SIXTY_GANZHI = Array.from({ length: 60 }, (_, index) => `${STEMS[index % 10]}${BRANCHES[index % 12]}`);
+  const BRANCH_CLASH = {
+    "子": "午", "午": "子",
+    "丑": "未", "未": "丑",
+    "寅": "申", "申": "寅",
+    "卯": "酉", "酉": "卯",
+    "辰": "戌", "戌": "辰",
+    "巳": "亥", "亥": "巳"
+  };
+  const BRANCH_COMBINE = {
+    "子": "丑", "丑": "子",
+    "寅": "亥", "亥": "寅",
+    "卯": "戌", "戌": "卯",
+    "辰": "酉", "酉": "辰",
+    "巳": "申", "申": "巳",
+    "午": "未", "未": "午"
+  };
+  const SIX_SPIRITS = ["青龍", "朱雀", "勾陳", "螣蛇", "白虎", "玄武"];
+  const SIX_SPIRIT_START = {
+    "甲": "青龍", "乙": "青龍",
+    "丙": "朱雀", "丁": "朱雀",
+    "戊": "勾陳",
+    "己": "螣蛇",
+    "庚": "白虎", "辛": "白虎",
+    "壬": "玄武", "癸": "玄武"
+  };
+  const SIX_SPIRIT_MEANINGS = {
+    "青龍": "助力、喜事、正面資源",
+    "朱雀": "訊息、口舌、文書表達",
+    "勾陳": "拖延、牽連、土地舊事",
+    "螣蛇": "疑慮、虛驚、想像與纏繞",
+    "白虎": "壓力、傷損、強硬衝突",
+    "玄武": "暗線、隱情、流動與不明"
+  };
+  const XUN_VOID = [
+    { start: "甲子", empty: ["戌", "亥"] },
+    { start: "甲戌", empty: ["申", "酉"] },
+    { start: "甲申", empty: ["午", "未"] },
+    { start: "甲午", empty: ["辰", "巳"] },
+    { start: "甲辰", empty: ["寅", "卯"] },
+    { start: "甲寅", empty: ["子", "丑"] }
+  ];
+
   const RELATIVE_MEANINGS = {
     "兄弟": "同類、競爭、朋友、分財",
     "子孫": "成果、放鬆、創造、解厄",
@@ -168,6 +213,44 @@
     health: "問健康時，官鬼多半代表壓力、病象或風險；子孫代表舒緩與復原；父母代表保護、照護與制度性安排。"
   };
 
+  const CATEGORY_DIMENSIONS = {
+    general: [
+      { key: "world", label: "自己與外部", type: "world" },
+      { key: "movement", label: "變化速度", type: "movement" },
+      { key: "focus", label: "核心用神", type: "relative", relatives: ["官鬼", "妻財", "父母", "子孫", "兄弟"], polarity: "support" },
+      { key: "hidden", label: "暗線伏神", type: "hidden" },
+      { key: "time", label: "時空助力", type: "time" }
+    ],
+    career: [
+      { key: "office", label: "責任與職位", type: "relative", relatives: ["官鬼"], polarity: "support" },
+      { key: "system", label: "制度與文件", type: "relative", relatives: ["父母"], polarity: "support" },
+      { key: "output", label: "成果輸出", type: "relative", relatives: ["子孫"], polarity: "support" },
+      { key: "world", label: "外部配合", type: "world" },
+      { key: "time", label: "時空落點", type: "time" }
+    ],
+    wealth: [
+      { key: "resource", label: "財源與資源", type: "relative", relatives: ["妻財"], polarity: "support" },
+      { key: "output", label: "產出與客源", type: "relative", relatives: ["子孫"], polarity: "support" },
+      { key: "split", label: "競爭與消耗", type: "relative", relatives: ["兄弟"], polarity: "risk" },
+      { key: "hidden", label: "暗財與缺位", type: "hidden" },
+      { key: "time", label: "時空落點", type: "time" }
+    ],
+    relationship: [
+      { key: "world", label: "自己與對方", type: "world" },
+      { key: "roles", label: "關係角色", type: "relative", relatives: ["妻財", "官鬼"], polarity: "support" },
+      { key: "movement", label: "互動變化", type: "movement" },
+      { key: "hidden", label: "未說出口", type: "hidden" },
+      { key: "time", label: "時空氣氛", type: "time" }
+    ],
+    health: [
+      { key: "risk", label: "壓力病象", type: "relative", relatives: ["官鬼"], polarity: "risk" },
+      { key: "recovery", label: "舒緩復原", type: "relative", relatives: ["子孫"], polarity: "support" },
+      { key: "care", label: "照護保護", type: "relative", relatives: ["父母"], polarity: "support" },
+      { key: "movement", label: "變化警訊", type: "movement" },
+      { key: "time", label: "時空助力", type: "time" }
+    ]
+  };
+
   const GENERATION_MEANINGS = {
     "本宮": "本宮卦氣純正，主題直接，事情多從根本性格發出。",
     "一世": "一世動於初，事情剛起，根基、第一步與起心動念最要緊。",
@@ -195,6 +278,10 @@
     {
       title: "飛伏",
       text: "卦面可見者為飛爻；用神不現時，回到本宮純卦同位爻尋伏神，另以對宮伏象觀察陰陽背面。"
+    },
+    {
+      title: "時空",
+      text: "可輸入或自動換算月建、日辰與時辰，加入六神、旬空、沖合與旺衰，觀察卦象落在當下時間氣候中的強弱。"
     }
   ];
 
@@ -358,6 +445,283 @@
       return `暗藏的${hiddenText}反過來牽制明面上的${flyingText}，真正的關鍵可能不在表面。`;
     }
     return `明面上的${flyingText}和暗藏的${hiddenText}沒有明顯生剋，還要合世應與動爻一起看。`;
+  }
+
+  function branchRelation(sourceBranch, targetBranch) {
+    if (!sourceBranch || !targetBranch) return null;
+    if (sourceBranch === targetBranch) return "same";
+    if (BRANCH_CLASH[sourceBranch] === targetBranch) return "clash";
+    if (BRANCH_COMBINE[sourceBranch] === targetBranch) return "combine";
+    return null;
+  }
+
+  function voidForDay(dayGanzhi) {
+    const index = SIXTY_GANZHI.indexOf(dayGanzhi);
+    if (index < 0) return null;
+    return XUN_VOID[Math.floor(index / 10)];
+  }
+
+  function sixSpiritForLine(dayStem, lineIndex) {
+    if (!dayStem) return "";
+    const start = SIX_SPIRIT_START[dayStem];
+    const startIndex = SIX_SPIRITS.indexOf(start);
+    if (startIndex < 0) return "";
+    return SIX_SPIRITS[(startIndex + lineIndex) % SIX_SPIRITS.length];
+  }
+
+  function buildTimeContext(options = {}) {
+    const monthBranch = BRANCHES.includes(options.monthBranch) ? options.monthBranch : "";
+    const dayGanzhi = SIXTY_GANZHI.includes(options.dayGanzhi) ? options.dayGanzhi : "";
+    const hourBranch = BRANCHES.includes(options.hourBranch) ? options.hourBranch : "";
+    const dayStem = dayGanzhi ? dayGanzhi.slice(0, 1) : "";
+    const dayBranch = dayGanzhi ? dayGanzhi.slice(1) : "";
+    const voidInfo = dayGanzhi ? voidForDay(dayGanzhi) : null;
+    return {
+      enabled: Boolean(monthBranch || dayGanzhi || hourBranch),
+      monthBranch,
+      monthElement: monthBranch ? BRANCH_ELEMENTS[monthBranch] : "",
+      dayGanzhi,
+      dayStem,
+      dayBranch,
+      dayElement: dayBranch ? BRANCH_ELEMENTS[dayBranch] : "",
+      hourBranch,
+      hourElement: hourBranch ? BRANCH_ELEMENTS[hourBranch] : "",
+      voidBranches: voidInfo ? voidInfo.empty : [],
+      xunStart: voidInfo ? voidInfo.start : ""
+    };
+  }
+
+  function dayGanzhiFromGregorian(year, month, day) {
+    let adjustedYear = year;
+    let adjustedMonth = month;
+    if (adjustedMonth <= 2) {
+      adjustedYear -= 1;
+      adjustedMonth += 12;
+    }
+    const century = Math.floor(adjustedYear / 100);
+    const yearInCentury = adjustedYear % 100;
+    const gzNumber = 44 * century
+      + Math.floor(century / 4)
+      + 5 * yearInCentury
+      + Math.floor(yearInCentury / 4)
+      + 30 * (adjustedMonth + 1)
+      + Math.floor((3 * (adjustedMonth + 1)) / 5)
+      + day
+      + 7;
+    const index = ((gzNumber - 1) % 60 + 60) % 60;
+    return SIXTY_GANZHI[index];
+  }
+
+  function approximateMonthBranchFromGregorian(month, day) {
+    const boundaries = [
+      { month: 1, day: 6, branch: "丑" },
+      { month: 2, day: 4, branch: "寅" },
+      { month: 3, day: 6, branch: "卯" },
+      { month: 4, day: 5, branch: "辰" },
+      { month: 5, day: 6, branch: "巳" },
+      { month: 6, day: 6, branch: "午" },
+      { month: 7, day: 7, branch: "未" },
+      { month: 8, day: 8, branch: "申" },
+      { month: 9, day: 8, branch: "酉" },
+      { month: 10, day: 8, branch: "戌" },
+      { month: 11, day: 8, branch: "亥" },
+      { month: 12, day: 7, branch: "子" }
+    ];
+    let branch = "子";
+    boundaries.forEach((boundary) => {
+      if (month > boundary.month || (month === boundary.month && day >= boundary.day)) {
+        branch = boundary.branch;
+      }
+    });
+    return branch;
+  }
+
+  function formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  function formatTime(date) {
+    const hour = String(date.getHours()).padStart(2, "0");
+    const minute = String(date.getMinutes()).padStart(2, "0");
+    return `${hour}:${minute}`;
+  }
+
+  function hourBranchFromDate(date) {
+    return BRANCHES[Math.floor((date.getHours() + 1) / 2) % 12];
+  }
+
+  function autoTimeContextForDate(date = new Date()) {
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const monthBranch = approximateMonthBranchFromGregorian(month, day);
+    const dayGanzhi = dayGanzhiFromGregorian(year, month, day);
+    const hourBranch = hourBranchFromDate(date);
+    return {
+      ...buildTimeContext({ monthBranch, dayGanzhi, hourBranch }),
+      autoDate: formatDate(date),
+      autoClock: formatTime(date),
+      monthApproximation: "日辰依本機公曆日期換算；若採子初換日，23:00 後可手動調到隔日。月建以常用節氣日期近似；若剛好在節氣交界，請以萬年曆校正。"
+    };
+  }
+
+  function branchInfluence(label, sourceBranch, line) {
+    if (!sourceBranch) return null;
+    const sourceElement = BRANCH_ELEMENTS[sourceBranch];
+    const relation = relationBetween(sourceElement, line.element);
+    const branchState = branchRelation(sourceBranch, line.najia.branch);
+    let score = 0;
+    const notes = [];
+
+    if (branchState === "same") {
+      score += label === "月" ? 2 : 1;
+      notes.push(`${label}臨`);
+    }
+    if (branchState === "combine") {
+      score += 1;
+      notes.push(`${label}合`);
+    }
+    if (branchState === "clash") {
+      score -= label === "月" ? 2 : 1;
+      notes.push(label === "月" ? "月破" : label === "日" ? "日破" : `${label}沖`);
+    }
+    if (relation === "generates") {
+      score += label === "月" ? 2 : 1;
+      notes.push(`${label}生`);
+    }
+    if (relation === "same" && branchState !== "same") {
+      score += 1;
+      notes.push(`${label}扶`);
+    }
+    if (relation === "controls") {
+      score -= label === "月" ? 2 : 1;
+      notes.push(`${label}克`);
+    }
+    if (relation === "generatedBy") {
+      score -= 1;
+      notes.push(`生${label}`);
+    }
+    if (relation === "controlledBy") {
+      score += 1;
+      notes.push(`克${label}`);
+    }
+
+    return {
+      label,
+      sourceBranch,
+      sourceElement,
+      score,
+      notes
+    };
+  }
+
+  function strengthLabel(score) {
+    if (score >= 4) return "旺";
+    if (score >= 2) return "相";
+    if (score <= -4) return "陷";
+    if (score <= -2) return "弱";
+    return "平";
+  }
+
+  function strengthMeaning(label) {
+    const meanings = {
+      "旺": "力量很足，事情容易顯化，但也可能過強。",
+      "相": "有助力，條件比平常順。",
+      "平": "力量中等，仍要看動爻與世應。",
+      "弱": "力量偏弱，需要補條件或等時機。",
+      "陷": "受制明顯，容易卡住或落空。"
+    };
+    return meanings[label] || "";
+  }
+
+  function annotateTime(reading, timeContext) {
+    const context = timeContext || buildTimeContext();
+    return reading.lineDetails.map((line, index) => {
+      const month = branchInfluence("月", context.monthBranch, line);
+      const day = branchInfluence("日", context.dayBranch, line);
+      const hour = branchInfluence("時", context.hourBranch, line);
+      const isVoid = context.voidBranches.includes(line.najia.branch);
+      const spirit = sixSpiritForLine(context.dayStem, index);
+      const hourScore = hour ? Math.max(-1, Math.min(1, hour.score)) : 0;
+      const score = (month ? month.score : 0) + (day ? day.score : 0) + hourScore + (isVoid ? -2 : 0) + (line.moving ? 1 : 0);
+      const strength = strengthLabel(score);
+      return {
+        line,
+        month,
+        day,
+        hour,
+        isVoid,
+        spirit,
+        spiritMeaning: spirit ? SIX_SPIRIT_MEANINGS[spirit] : "",
+        score,
+        strength,
+        strengthMeaning: strengthMeaning(strength),
+        notes: [
+        ...(month ? month.notes : []),
+        ...(day ? day.notes : []),
+        ...(hour ? hour.notes : []),
+        ...(isVoid ? ["空亡"] : []),
+        ...(line.moving ? ["動"] : [])
+      ]
+      };
+    });
+  }
+
+  function timeContextSummary(timeContext) {
+    if (!timeContext || !timeContext.enabled) {
+      return ["尚未填入月建、日辰或時辰；目前解讀不含時空旺衰、空亡與六神。"];
+    }
+    const items = [];
+    if (timeContext.monthBranch) {
+      items.push(`月建為${timeContext.monthBranch}，五行屬${timeContext.monthElement}；月建像大環境、季節氣候，會影響每一爻的力量。`);
+    }
+    if (timeContext.dayGanzhi) {
+      items.push(`日辰為${timeContext.dayGanzhi}，日支${timeContext.dayBranch}屬${timeContext.dayElement}；日辰像當下這一天的近身力量。`);
+      items.push(`${timeContext.xunStart}旬空亡為${timeContext.voidBranches.join("、")}，落在這兩個地支的爻，事情容易有空、慢、虛、不實或暫時不到位的感覺。`);
+    }
+    if (timeContext.hourBranch) {
+      items.push(`時辰為${timeContext.hourBranch}，五行屬${timeContext.hourElement}；時辰像當下短時間的觸發點，提醒哪一爻比較容易被碰到。`);
+    }
+    return items;
+  }
+
+  function advancedInterpretationItems(reading, timeContext) {
+    const context = timeContext || buildTimeContext();
+    const items = timeContextSummary(context);
+    if (!context.enabled) return items;
+
+    const annotations = annotateTime(reading, context);
+    const strong = annotations.filter((item) => item.strength === "旺" || item.strength === "相");
+    const weak = annotations.filter((item) => item.strength === "弱" || item.strength === "陷" || item.isVoid);
+    const broken = annotations.filter((item) => item.notes.includes("月破") || item.notes.includes("日破"));
+    const moving = annotations.filter((item) => item.line.moving);
+
+    if (strong.length) {
+      items.push(`較有力的位置：${strong.map((item) => `${item.line.label}${relativeWithPlain(item.line.relative)}${item.strength}`).join("、")}。這些爻比較有條件發揮。`);
+    }
+    if (weak.length) {
+      items.push(`較需要留意的位置：${weak.map((item) => `${item.line.label}${relativeWithPlain(item.line.relative)}${item.isVoid ? "空亡" : item.strength}`).join("、")}。這些爻容易慢、弱、空或條件不足。`);
+    }
+    if (broken.length) {
+      items.push(`有沖破訊號：${broken.map((item) => `${item.line.label}${item.notes.filter((note) => note.includes("破")).join("、")}`).join("、")}。白話說，這些位置容易被環境或當下狀態衝到。`);
+    }
+    if (moving.length) {
+      items.push(`動爻若同時得月日扶助，變化比較容易成；若動爻空亡或受破，則像有動作但落地較慢。`);
+    }
+    return items;
+  }
+
+  function timeRiskPlain(reading, timeContext) {
+    const context = timeContext || buildTimeContext();
+    if (!context.enabled) return "";
+    const annotations = annotateTime(reading, context);
+    const focusLines = annotations.filter((item) => item.line.role.includes("世") || item.line.role.includes("應") || item.line.moving);
+    const riskLines = focusLines.filter((item) => item.isVoid || item.notes.includes("月破") || item.notes.includes("日破") || item.notes.includes("時沖") || item.strength === "弱" || item.strength === "陷");
+    if (!riskLines.length) return "月日條件沒有明顯打壞世應或動爻，進階時空層暫時不算逆風。";
+    return `進階時空層要注意：${riskLines.map((item) => `${item.line.label}${relativeWithPlain(item.line.relative)}${item.notes.length ? `（${item.notes.join("、")}）` : `（${item.strength}）`}`).join("、")}。`;
   }
 
   function relativeFromPalace(palaceElement, lineElement) {
@@ -599,21 +963,341 @@
     return `下一步先處理${movingLines}，再回頭檢查${focus}是否到位。`;
   }
 
-  function buildPlainSummary(reading, category, title) {
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function uniqueItems(items, keyFn) {
+    const seen = new Set();
+    return items.filter((item) => {
+      const key = keyFn(item);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  function strengthScore(strength) {
+    const scores = { "旺": 2, "相": 1, "平": 0, "弱": -1, "陷": -2 };
+    return scores[strength] || 0;
+  }
+
+  function lineHasBreak(item) {
+    return item.notes.includes("月破") || item.notes.includes("日破") || item.notes.includes("時沖");
+  }
+
+  function linePower(item) {
+    let score = strengthScore(item.strength);
+    if (item.line.role.includes("世")) score += 1;
+    if (item.line.moving) score += 1;
+    if (item.isVoid) score -= 1;
+    if (lineHasBreak(item)) score -= 1;
+    return clamp(score, -4, 4);
+  }
+
+  function scoreStatus(score) {
+    if (score >= 2) return "順勢";
+    if (score >= 1) return "可用";
+    if (score <= -2) return "受阻";
+    if (score <= -1) return "偏弱";
+    return "拉扯";
+  }
+
+  function overallTone(score) {
+    if (score >= 2) return "順勢可推";
+    if (score >= 1) return "條件可用";
+    if (score <= -2) return "先守風險";
+    if (score <= -1) return "先穩後動";
+    return "需要拿捏";
+  }
+
+  function linePlain(item) {
+    const role = item.line.role.length ? `兼${item.line.role.join("、")}` : "無特殊標記";
+    const notes = item.notes.length ? `；${item.notes.join("、")}` : "";
+    return `${item.line.label}${relativeWithPlain(item.line.relative)}（${role}，${item.strength}${notes}）`;
+  }
+
+  function relationAdvice(relation) {
+    const advice = {
+      same: "可以找共同點，但要防止彼此卡在同一種立場。",
+      generates: "先檢查自己是否付出過多，避免用消耗換進展。",
+      generatedBy: "可借外部助力，但不要完全等待對方或環境。",
+      controls: "有掌控力時要把界線說清楚，語氣不可太硬。",
+      controlledBy: "外部壓力較強，先化解阻力，再談推進。",
+      neutral: "世應沒有明顯生剋，先看動爻和用神決定主線。"
+    };
+    return advice[relation] || advice.neutral;
+  }
+
+  function worldDimension(reading, annotations) {
+    const world = reading.lineDetails[reading.palace.worldLine - 1];
+    const response = reading.lineDetails[reading.palace.responseLine - 1];
+    const worldItem = annotations[world.index];
+    const relation = relationBetween(world.element, response.element);
+    const relationScores = {
+      same: 1,
+      generates: 0,
+      generatedBy: 2,
+      controls: 1,
+      controlledBy: -2,
+      neutral: 0
+    };
+    const score = clamp((relationScores[relation] || 0) + Math.round(linePower(worldItem) / 2), -3, 3);
+    return {
+      label: "自己與外部",
+      score,
+      status: scoreStatus(score),
+      summary: `${worldResponseReading(reading)}世爻為${linePlain(worldItem)}，代表你目前能動用的自身條件。`,
+      advice: relationAdvice(relation)
+    };
+  }
+
+  function movementDimension(reading, annotations, category) {
+    const moving = reading.movingIndexes.map((index) => annotations[index]);
+    let score = reading.movingIndexes.length === 0 ? 1 : reading.movingIndexes.length <= 2 ? 1 : -2;
+    const strongMoving = moving.filter((item) => item.strength === "旺" || item.strength === "相");
+    const weakMoving = moving.filter((item) => item.isVoid || lineHasBreak(item) || item.strength === "弱" || item.strength === "陷");
+    if (strongMoving.length) score += 1;
+    if (weakMoving.length) score -= 1;
+
+    const riskyRelatives = category === "wealth" ? ["兄弟"] : category === "health" ? ["官鬼"] : [];
+    if (moving.some((item) => riskyRelatives.includes(item.line.relative))) score -= 1;
+    score = clamp(score, -3, 3);
+
+    if (!moving.length) {
+      return {
+        label: "變化速度",
+        score,
+        status: scoreStatus(score),
+        summary: "本卦沒有動爻，局勢暫時不像要立刻翻轉；好處是穩，限制是進展不會自己加速。",
+        advice: "先整理條件與證據，不急著做不可逆決定。"
+      };
+    }
+
+    return {
+      label: "變化速度",
+      score,
+      status: scoreStatus(score),
+      summary: `動爻落在${moving.map(linePlain).join("、")}。這些位置就是事情正在變的地方。`,
+      advice: reading.movingIndexes.length <= 2
+        ? "先處理動爻代表的人事物，會比全面開打有效。"
+        : "變動點偏多，先降槓桿、留退路，再選主線。"
+    };
+  }
+
+  function relativeDimension(reading, annotations, config) {
+    const visible = annotations.filter((item) => config.relatives.includes(item.line.relative));
+    const missingRelatives = config.relatives.filter((relative) => !visible.some((item) => item.line.relative === relative));
+    const relativeText = config.relatives.map(relativeWithPlain).join("、");
+
+    if (config.polarity === "risk") {
+      if (!visible.length) {
+        return {
+          label: config.label,
+          score: 2,
+          status: "順勢",
+          summary: `${relativeText}沒有明顯站到卦面上，這類壓力或消耗暫時不算表面主角。`,
+          advice: "仍要看伏神與現實跡象，避免暗處問題拖到後面才出現。"
+        };
+      }
+      const riskPower = Math.max(...visible.map((item) => 1 + Math.max(0, linePower(item))));
+      const score = clamp(2 - riskPower, -3, 3);
+      return {
+        label: config.label,
+        score,
+        status: scoreStatus(score),
+        summary: `${relativeText}出現在${visible.map(linePlain).join("、")}。這個向度越旺，越像壓力、競爭、病象或消耗被放大。`,
+        advice: score < 0 ? "先把壓力源拆小，減少硬碰硬與長期消耗。" : "目前風險可管理，但仍要持續觀察是否被動爻或時空引動。"
+      };
+    }
+
+    if (!visible.length) {
+      const hidden = hiddenFindings(reading, "general").filter((finding) => config.relatives.includes(finding.relative));
+      const hiddenText = hidden.length
+        ? `可回到伏神看${hidden.map((finding) => relativeWithPlain(finding.relative)).join("、")}藏在哪裡。`
+        : "伏神也沒有明顯補足，現實上要主動找條件。";
+      return {
+        label: config.label,
+        score: -1,
+        status: "偏弱",
+        summary: `${relativeText}沒有明顯出現在卦面，代表這個問題需要的關鍵條件還不夠浮上檯面。${hiddenText}`,
+        advice: "先把缺的資源、文件、承諾或支援明確列出來，不要只憑感覺推進。"
+      };
+    }
+
+    const averagePower = visible.reduce((sum, item) => sum + linePower(item), 0) / visible.length;
+    const score = clamp(1 + Math.round(averagePower / 2) - (missingRelatives.length ? 1 : 0), -3, 3);
+    return {
+      label: config.label,
+      score,
+      status: scoreStatus(score),
+      summary: `${relativeText}可見於${visible.map(linePlain).join("、")}。${missingRelatives.length ? `但${missingRelatives.map(relativeWithPlain).join("、")}仍不在明面，條件還未完整。` : "主要角色已在明面，適合直接檢查強弱與動靜。"}`,
+      advice: score >= 1 ? "可沿著已出現的條件小步推進，同時確認它是否真能落地。" : "先補足缺位或偏弱的位置，再把行動放大。"
+    };
+  }
+
+  function hiddenDimension(reading, category) {
+    const findings = hiddenFindings(reading, category);
+    const absent = findings.filter((finding) => finding.absent && finding.palaceHidden);
+    if (!absent.length) {
+      return {
+        label: "暗線伏神",
+        score: 2,
+        status: "順勢",
+        summary: "此類問題的主要用神多數已在明面，判斷可先看世應、動爻與時空強弱。",
+        advice: "先處理看得到的條件，伏神作為補充，不必過度猜暗線。"
+      };
+    }
+
+    let score = -absent.length;
+    const details = absent.map((finding) => {
+      const hidden = finding.palaceHidden.palace;
+      const flying = finding.palaceHidden.flying;
+      const relation = hidden.flyHiddenLabel;
+      if (relation === "飛伏同氣" || relation === "飛生伏" || relation === "伏生飛") score += 1;
+      if (relation === "飛克伏" || relation === "伏克飛") score -= 1;
+      return `${relativeWithPlain(finding.relative)}藏在${hidden.label}${hidden.najia.text}，明面同位是${flying.najia.text}${flying.relative}，${relation}`;
+    });
+
+    score = clamp(score, -3, 3);
+    return {
+      label: "暗線伏神",
+      score,
+      status: scoreStatus(score),
+      summary: `${details.join("；")}。`,
+      advice: score < 0 ? "關鍵因素還不完全透明，先查證、問清楚、等訊號浮出，不宜把話說死。" : "暗線雖在背後，但與明面仍有接通可能，可用現實證據慢慢逼近。"
+    };
+  }
+
+  function timeDimension(reading, annotations, timeContext, category) {
+    const context = timeContext || buildTimeContext();
+    if (!context.enabled) {
+      return {
+        label: "時空助力",
+        score: 0,
+        status: "拉扯",
+        summary: "目前未啟用月建、日辰或時辰，所以這一層不參與強弱判斷。",
+        advice: "可按本機時間自動填入，再看世爻、應爻、動爻是否得月日扶助或落空受破。"
+      };
+    }
+
+    const focus = new Set([
+      reading.palace.worldLine - 1,
+      reading.palace.responseLine - 1,
+      ...reading.movingIndexes
+    ]);
+    focusRelatives(category).forEach((relative) => {
+      annotations
+        .filter((item) => item.line.relative === relative)
+        .forEach((item) => focus.add(item.line.index));
+    });
+
+    const focusItems = uniqueItems([...focus].map((index) => annotations[index]).filter(Boolean), (item) => item.line.index);
+    const strong = focusItems.filter((item) => item.strength === "旺" || item.strength === "相");
+    const weak = focusItems.filter((item) => item.isVoid || lineHasBreak(item) || item.strength === "弱" || item.strength === "陷");
+    const score = clamp(strong.length - weak.length, -3, 3);
+    const timeParts = [
+      context.monthBranch ? `月建${context.monthBranch}` : "",
+      context.dayGanzhi ? `日辰${context.dayGanzhi}` : "",
+      context.hourBranch ? `時辰${context.hourBranch}` : ""
+    ].filter(Boolean).join("、");
+
+    return {
+      label: "時空助力",
+      score,
+      status: scoreStatus(score),
+      summary: `${timeParts}已納入判斷。較有力者：${strong.length ? strong.map(linePlain).join("、") : "不明顯"}；較需留意者：${weak.length ? weak.map(linePlain).join("、") : "不明顯"}。`,
+      advice: score >= 1 ? "可順著有力的爻安排時機；弱、空、破的位置先不要硬推。" : "先避開空亡與受沖的位置，等條件補足或換時間再加力。"
+    };
+  }
+
+  function dimensionFromConfig(reading, annotations, timeContext, category, config) {
+    if (config.type === "world") return { ...worldDimension(reading, annotations), label: config.label };
+    if (config.type === "movement") return { ...movementDimension(reading, annotations, category), label: config.label };
+    if (config.type === "relative") return relativeDimension(reading, annotations, config);
+    if (config.type === "hidden") return { ...hiddenDimension(reading, category), label: config.label };
+    if (config.type === "time") return { ...timeDimension(reading, annotations, timeContext, category), label: config.label };
+    return {
+      label: config.label,
+      score: 0,
+      status: "拉扯",
+      summary: "此向度尚未定義判斷規則。",
+      advice: "先回到世應、動爻與用神。"
+    };
+  }
+
+  function buildJudgementModel(reading, category, timeContext) {
+    const configs = CATEGORY_DIMENSIONS[category] || CATEGORY_DIMENSIONS.general;
+    const annotations = annotateTime(reading, timeContext);
+    const dimensions = configs.map((config) => dimensionFromConfig(reading, annotations, timeContext, category, config));
+    const score = Math.round(dimensions.reduce((sum, dimension) => sum + dimension.score, 0) / dimensions.length);
+    return {
+      category,
+      categoryName: CATEGORY_NAMES[category] || CATEGORY_NAMES.general,
+      score,
+      tone: overallTone(score),
+      dimensions,
+      strengths: dimensions.filter((dimension) => dimension.score >= 1),
+      risks: dimensions.filter((dimension) => dimension.score <= -1)
+    };
+  }
+
+  function buildJudgementHighlights(judgement) {
+    const strengths = judgement.strengths.length ? judgement.strengths.map((dimension) => dimension.label).join("、") : "暫無特別突出的順勢點";
+    const risks = judgement.risks.length ? judgement.risks.map((dimension) => dimension.label).join("、") : "暫無明顯受阻向度";
+    return [
+      `重點一｜綜合判斷：以${judgement.categoryName}來看，目前屬於「${judgement.tone}」。這是把世應、動爻、用神、飛伏與時空強弱合在一起的規則化判斷，不是單看卦名。`,
+      `重點二｜可用力量：${strengths}。這些地方比較適合先借力或先落地。`,
+      `重點三｜優先注意：${risks}。這些地方若不處理，容易變成拖延、消耗或誤判。`
+    ];
+  }
+
+  function buildDimensionItems(judgement) {
+    return judgement.dimensions.map((dimension) => {
+      return `${dimension.label}｜${dimension.status}：${dimension.summary}建議：${dimension.advice}`;
+    });
+  }
+
+  function categoryActionPlain(category) {
+    const actions = {
+      general: "把問題拆成三欄：自己能做的、外部要確認的、正在變動的；先處理最有證據的一欄。",
+      career: "先確認職責、文件、交付物與決策者期待，把模糊承諾轉成可檢查的節點。",
+      wealth: "先確認實際可入帳或可掌握的資源，再控管分利、成本與競爭造成的流失。",
+      relationship: "先把彼此位置、期待與界線說清楚；不要用猜測代替溝通，也不要急著定局。",
+      health: "先降低壓力源、安排休息與檢查；若有明顯不適，請以醫療專業判斷為主。"
+    };
+    return actions[category] || actions.general;
+  }
+
+  function timePositionPlain(timeContext) {
+    const context = timeContext || buildTimeContext();
+    if (!context.enabled) return "尚未放入月建、日辰或時辰，所以只能看卦內結構，不能判斷當下時間氣候的助力。";
+    const parts = [];
+    if (context.monthBranch) parts.push(`月建${context.monthBranch}${context.monthElement}`);
+    if (context.dayGanzhi) parts.push(`日辰${context.dayGanzhi}，空亡${context.voidBranches.join("、")}`);
+    if (context.hourBranch) parts.push(`時辰${context.hourBranch}${context.hourElement}`);
+    return `所在時空為${parts.join("；")}。月建看大環境，日辰看當日力量，時辰看短時間觸發。`;
+  }
+
+  function buildPlainSummary(reading, category, title, timeContext, judgementInput) {
     const hexagram = reading.hexagram;
     const changed = reading.changedHexagram;
-    const categoryName = CATEGORY_NAMES[category] || CATEGORY_NAMES.general;
+    const judgement = judgementInput || buildJudgementModel(reading, category, timeContext);
+    const extraTimeRisk = timeRiskPlain(reading, timeContext);
     const transition = hexagram.number === changed.number
       ? `${hexagram.fullName}的原局，暫時沒有明顯變卦`
       : `${hexagram.fullName}走向${changed.fullName}`;
-    return [
-      `整體看，${title}屬於「${transition}」的局。白話說，現在不是單純問吉凶，而是在看事情從目前狀態往哪裡變。`,
-      `所在位置是${reading.palace.palace}宮${reading.palace.generation}，卦宮五行屬${reading.palace.palaceElement}。八宮裡的「位置」像是事情所在的時空階段：它告訴你這件事現在偏向起步、推進、外移、回收，還是回到原問題。${GENERATION_MEANINGS[reading.palace.generation]}`,
-      `${categoryName}面向來看，${movingPlain(reading)}`,
-      advantagePlain(reading),
-      riskPlain(reading, category),
-      nextStepPlain(reading, category)
+    const strongest = judgement.strengths.length ? judgement.strengths.map((dimension) => `${dimension.label}${dimension.status}`).join("、") : "可用力量不算明顯";
+    const weakest = judgement.risks.length ? judgement.risks.map((dimension) => `${dimension.label}${dimension.status}`).join("、") : "沒有特別尖銳的阻點";
+    const items = [
+      `最後歸納｜${title}屬於「${transition}」的局。以${judgement.categoryName}來看，整體判斷是「${judgement.tone}」；白話說，這不是單純吉凶，而是看目前條件能不能支撐下一步。`,
+      `所在位置｜此卦在${reading.palace.palace}宮${reading.palace.generation}，卦宮五行屬${reading.palace.palaceElement}。${GENERATION_MEANINGS[reading.palace.generation]}${timePositionPlain(timeContext)}`,
+      `優點｜${advantagePlain(reading)}目前較可用的向度是：${strongest}。`,
+      `需要注意｜${riskPlain(reading, category)}換成向度來看，較需要補強的是：${weakest}。`,
+      `方向作法｜${nextStepPlain(reading, category)}${categoryActionPlain(category)}`
     ];
+    if (extraTimeRisk) items.splice(items.length - 1, 0, extraTimeRisk);
+    return items;
   }
 
   function hiddenInterpretationItems(reading, category) {
@@ -640,6 +1324,7 @@
   function buildInterpretation(reading, options = {}) {
     const question = (options.question || "").trim();
     const category = options.category || "general";
+    const timeContext = options.timeContext || buildTimeContext();
     const hexagram = reading.hexagram;
     const changed = reading.changedHexagram;
     const movingCount = reading.movingIndexes.length;
@@ -649,6 +1334,7 @@
       : movingCount <= 2
         ? "變化集中，抓住動爻即可掌握主線。"
         : "多爻發動，局勢變化較大，宜先降風險再求進展。";
+    const judgement = buildJudgementModel(reading, category, timeContext);
 
     const sections = [
       {
@@ -668,6 +1354,10 @@
         ]
       },
       {
+        title: "時空",
+        items: advancedInterpretationItems(reading, timeContext)
+      },
+      {
         title: "動爻",
         items: movingLineReadings(reading)
       },
@@ -680,8 +1370,16 @@
         items: [CATEGORY_HINTS[category] || CATEGORY_HINTS.general]
       },
       {
+        title: "重點判斷",
+        items: buildJudgementHighlights(judgement)
+      },
+      {
+        title: "向度解釋",
+        items: buildDimensionItems(judgement)
+      },
+      {
         title: "總結",
-        items: buildPlainSummary(reading, category, title)
+        items: buildPlainSummary(reading, category, title, timeContext, judgement)
       }
     ];
 
@@ -698,6 +1396,11 @@
     HEX_BY_NUMBER,
     LINE_VALUES,
     LINE_LABELS,
+    STEMS,
+    BRANCHES,
+    SIXTY_GANZHI,
+    SIX_SPIRITS,
+    SIX_SPIRIT_MEANINGS,
     PALACE_TABLE: PALACE_DATA.table,
     BRANCH_ELEMENTS,
     RELATIVE_MEANINGS,
@@ -708,6 +1411,13 @@
     analyze,
     castCoins,
     coinText,
+    buildTimeContext,
+    autoTimeContextForDate,
+    dayGanzhiFromGregorian,
+    approximateMonthBranchFromGregorian,
+    annotateTime,
+    advancedInterpretationItems,
+    buildJudgementModel,
     relationBetween,
     relationLabel,
     flyHiddenLabel,
