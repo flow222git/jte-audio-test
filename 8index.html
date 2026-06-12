@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>京房八宮起卦</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="app-header">
+      <div class="brand-copy">
+        <p class="eyebrow">Jing Fang Eight Palaces</p>
+        <h1>京房八宮起卦</h1>
+      </div>
+      <div class="nature-mark" aria-hidden="true">
+        <svg viewBox="0 0 240 118" role="img">
+          <path class="wash" d="M17 84c36-31 52-34 82-10 19 15 35 19 61-7 22-22 38-24 62-7" />
+          <path class="mountain" d="M21 80c17-18 31-27 42-27 12 0 20 15 31 15 13 0 25-28 41-28 17 0 26 31 43 31 10 0 22-10 38-21" />
+          <path class="water" d="M41 92c22 6 39 6 58 0m24 0c24 6 44 6 67 0" />
+          <circle class="moon" cx="184" cy="32" r="13" />
+          <path class="reed" d="M36 89c-2-15 1-27 10-37m-3 32c4-11 10-19 20-25" />
+        </svg>
+      </div>
+    </header>
+
+    <section class="workbench" aria-label="起卦工具">
+      <aside class="control-panel">
+        <label class="field">
+          <span>所問之事</span>
+          <textarea id="question" rows="4" placeholder="例如：這個合作案接下來三個月的走勢"></textarea>
+        </label>
+
+        <label class="field">
+          <span>問事類型</span>
+          <select id="category">
+            <option value="general">總體</option>
+            <option value="career">事業</option>
+            <option value="wealth">財務</option>
+            <option value="relationship">感情</option>
+            <option value="health">健康</option>
+          </select>
+        </label>
+
+        <div class="button-row">
+          <button id="cast" class="primary" type="button">三錢起卦</button>
+          <button id="readManual" type="button">套用手動六爻</button>
+        </div>
+
+        <p class="input-help">三錢起卦會隨機擲出六爻；手動六爻則使用下方 6、7、8、9 的設定重新算出卦盤。</p>
+
+        <div class="manual-lines" id="manualLines" aria-label="手動六爻"></div>
+      </aside>
+
+      <section class="result-panel">
+        <div class="summary-grid">
+          <article class="hex-card primary-hex">
+            <div class="hex-stack" id="mainHexStack"></div>
+            <div>
+              <p class="label">本卦</p>
+              <h2 id="mainHexName">-</h2>
+              <p id="mainHexMeta" class="muted">-</p>
+            </div>
+          </article>
+
+          <article class="hex-card">
+            <div class="big-symbol" id="changedSymbol">-</div>
+            <div>
+              <p class="label">變卦</p>
+              <h2 id="changedHexName">-</h2>
+              <p id="changedHexMeta" class="muted">-</p>
+            </div>
+          </article>
+
+          <article class="metric-card">
+            <p class="label">八宮</p>
+            <strong id="palaceName">-</strong>
+            <span id="palaceMeta">-</span>
+          </article>
+
+          <article class="metric-card">
+            <p class="label">世應</p>
+            <strong id="worldResponse">-</strong>
+            <span id="movingMeta">-</span>
+          </article>
+        </div>
+
+        <nav class="tabs" aria-label="結果分頁">
+          <button class="tab active" data-tab="reading" type="button">解讀</button>
+          <button class="tab" data-tab="lines" type="button">爻表</button>
+          <button class="tab" data-tab="hidden" type="button">飛伏</button>
+          <button class="tab" data-tab="palaces" type="button">八宮</button>
+          <button class="tab" data-tab="model" type="button">模型</button>
+        </nav>
+
+        <section class="tab-panel active" id="readingTab">
+          <div id="readingContent" class="reading-content"></div>
+        </section>
+
+        <section class="tab-panel" id="linesTab">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>爻位</th>
+                  <th>爻象</th>
+                  <th>納甲</th>
+                  <th>五行</th>
+                  <th>六親</th>
+                  <th>標記</th>
+                </tr>
+              </thead>
+              <tbody id="lineTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="hiddenTab">
+          <div id="hiddenSummary" class="hidden-summary"></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>爻位</th>
+                  <th>飛爻</th>
+                  <th>本宮伏神</th>
+                  <th>飛伏</th>
+                  <th>對宮伏象</th>
+                </tr>
+              </thead>
+              <tbody id="hiddenTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="palacesTab">
+          <div id="palaceTable" class="palace-table"></div>
+        </section>
+
+        <section class="tab-panel" id="modelTab">
+          <div id="modelContent" class="model-grid"></div>
+        </section>
+      </section>
+    </section>
+
+    <footer class="footer-note">
+      京房八宮、三錢法、納甲六親為規則化整理；解讀供研究參考，不替代專業決策。
+    </footer>
+  </main>
+
+  <script src="logic.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
