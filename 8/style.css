@@ -970,6 +970,20 @@ button:focus-visible {
   color: var(--cinnabar);
 }
 
+.question-focus-block {
+  grid-column: 1 / -1;
+  border-color: rgba(157, 75, 52, 0.22);
+  background: linear-gradient(180deg, rgba(255, 253, 246, 0.9), rgba(244, 239, 228, 0.78));
+}
+
+.question-focus-block h3 {
+  color: var(--pine-dark);
+}
+
+.question-focus-block p:first-of-type {
+  font-weight: 700;
+}
+
 .detail-list {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }

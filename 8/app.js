@@ -506,8 +506,8 @@
       category: refs.category.value,
       timeContext
     });
-    const summarySections = sections.filter((section) => section.title === "總結");
-    const detailSections = sections.filter((section) => !["總結", "重點判斷", "向度解釋"].includes(section.title));
+    const summarySections = sections.filter((section) => ["問題對焦", "總結"].includes(section.title));
+    const detailSections = sections.filter((section) => !["問題對焦", "總結", "重點判斷", "向度解釋"].includes(section.title));
     const castHtml = currentCasts ? `
       <section class="reading-block cast-block">
         <h3>三錢</h3>
@@ -520,7 +520,7 @@
     ` : "";
 
     const summaryHtml = (section) => `
-      <section class="reading-block${section.title === "總結" ? " summary-block" : ""}">
+      <section class="reading-block${section.title === "總結" ? " summary-block" : ""}${section.title === "問題對焦" ? " question-focus-block" : ""}">
         <h3>${escapeHtml(section.title)}</h3>
         ${section.items.map((item) => `<p>${escapeHtml(item)}</p>`).join("")}
       </section>

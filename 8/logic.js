@@ -1258,6 +1258,141 @@
     });
   }
 
+  function detectQuestionIntent(question) {
+    const text = String(question || "").trim();
+    const timeframePatterns = [
+      "接下來三個月", "未來三個月", "三個月", "這一季", "本季", "今年", "明年",
+      "這個月", "本月", "下個月", "這週", "這周", "今天", "明天", "近期", "最近",
+      "半年", "一年", "這次", "目前", "現在"
+    ];
+    const timeframe = timeframePatterns.find((pattern) => text.includes(pattern)) || "";
+    const intents = [
+      {
+        key: "yesno",
+        label: "可否推進",
+        readAs: "先回答能不能做、適不適合現在做",
+        keywords: ["適不適合", "適合", "要不要", "是否", "能否", "能不能", "會不會", "可不可以", "該不該", "會成", "會成功", "推進嗎"]
+      },
+      {
+        key: "obstacle",
+        label: "卡點風險",
+        readAs: "先找阻力、破口和最需要留意的位置",
+        keywords: ["卡", "阻力", "問題", "風險", "注意", "擔心", "危機", "困難", "不順", "隱患"]
+      },
+      {
+        key: "action",
+        label: "下一步作法",
+        readAs: "先收斂成下一步怎麼做",
+        keywords: ["怎麼", "如何", "下一步", "作法", "做法", "處理", "改善", "調整", "建議", "該先"]
+      },
+      {
+        key: "trend",
+        label: "走勢發展",
+        readAs: "先看本卦到變卦的走勢與變化速度",
+        keywords: ["走勢", "發展", "變化", "趨勢", "結果", "後續", "未來", "接下來"]
+      },
+      {
+        key: "choice",
+        label: "選擇取捨",
+        readAs: "先看自己與外部是否相應，再看哪個條件要取捨",
+        keywords: ["選擇", "方案", "哪個", "取捨", "比較", "A", "B", "a", "b"]
+      }
+    ];
+    const intent = intents.find((item) => item.keywords.some((keyword) => text.includes(keyword))) || {
+      key: "general",
+      label: "局勢整理",
+      readAs: "先整理局勢、可用條件與優先注意處"
+    };
+    return {
+      text,
+      timeframe,
+      intent
+    };
+  }
+
+  function dimensionByType(judgement, type) {
+    return judgement.dimensions.find((dimension) => dimension.label.includes(type));
+  }
+
+  function strongestPlain(judgement) {
+    return judgement.strengths.length ? judgement.strengths.map((dimension) => `${dimension.label}（${dimension.status}）`).join("、") : "暫無明顯可借力處";
+  }
+
+  function riskPlainFromJudgement(judgement) {
+    return judgement.risks.length ? judgement.risks.map((dimension) => `${dimension.label}（${dimension.status}）`).join("、") : "暫無明顯紅燈或黃燈風險";
+  }
+
+  function answerForIntent(context, reading, judgement) {
+    const tone = judgement.tone;
+    const strongest = strongestPlain(judgement);
+    const risks = riskPlainFromJudgement(judgement);
+    const movement = dimensionByType(judgement, "變化") || dimensionByType(judgement, "互動") || dimensionByType(judgement, "警訊");
+    const world = dimensionByType(judgement, "自己") || dimensionByType(judgement, "外部");
+    const time = dimensionByType(judgement, "時空");
+    const changedText = reading.hexagram.number === reading.changedHexagram.number
+      ? "本卦未變，答案偏向先看原局條件，不是立刻大轉向。"
+      : `本卦由${reading.hexagram.fullName}走向${reading.changedHexagram.fullName}，表示問題會沿著動爻方向轉變。`;
+
+    if (context.intent.key === "yesno") {
+      if (tone === "順勢推進") return `直接回應｜偏向可以推進，但要照卦裡的順勢點推：${strongest}。`;
+      if (tone === "小步推進") return `直接回應｜可以試，但不適合一次放大；先小步驗證，並看住：${risks}。`;
+      if (tone === "先定主線") return `直接回應｜現在還不適合直接判成或不成；先把目標、角色與外部條件定清楚。`;
+      if (tone === "先補條件") return `直接回應｜先不要急著做最終決定；補好${risks}之後，再判斷能不能推進。`;
+      return `直接回應｜目前偏向不宜硬推；先避開${risks}，等局勢回穩再重新判斷。`;
+    }
+
+    if (context.intent.key === "obstacle") {
+      return `直接回應｜這卦把阻力指向${risks}。若要讓事情順，先處理這些位置，不要只看表面進度。`;
+    }
+
+    if (context.intent.key === "action") {
+      return `直接回應｜下一步先做兩件事：借力${strongest}，同時補強${risks}。行動要小而可驗證。`;
+    }
+
+    if (context.intent.key === "trend") {
+      const movementText = movement ? `${movement.label}為「${movement.status}」` : "動爻是主要變化線";
+      const timeText = time ? `，${time.label}為「${time.status}」` : "";
+      return `直接回應｜${changedText}${movementText}${timeText}，所以先看變化速度與時間氣候，不要只看最後卦名。`;
+    }
+
+    if (context.intent.key === "choice") {
+      const worldText = world ? `${world.label}為「${world.status}」` : "先看世應是否相應";
+      return `直接回應｜這題重點在取捨。${worldText}；再用${strongest}當可取之處，用${risks}當不可忽略的代價。`;
+    }
+
+    return `直接回應｜先把這卦讀成局勢整理：可借力在${strongest}；要先留意${risks}。`;
+  }
+
+  function focusDimensionsForIntent(context, judgement) {
+    if (context.intent.key === "yesno") {
+      return "先看整體燈號，再看綠燈能不能支撐紅黃燈的風險。";
+    }
+    if (context.intent.key === "obstacle") {
+      return `先看紅黃燈：${riskPlainFromJudgement(judgement)}。`;
+    }
+    if (context.intent.key === "action") {
+      return `先看一綠一紅：可借力是${strongestPlain(judgement)}；要補的是${riskPlainFromJudgement(judgement)}。`;
+    }
+    if (context.intent.key === "trend") {
+      return "先看本卦到變卦、動爻數量、時空落點，這三個決定事情是快動、慢動或先卡住。";
+    }
+    if (context.intent.key === "choice") {
+      return "先看世應和暗線，判斷選項背後的代價是否浮上檯面。";
+    }
+    return "先看五向度裡哪個是綠燈、哪個是黃燈或紅燈，再決定下一步。";
+  }
+
+  function buildQuestionFocus(reading, category, question, timeContext, judgement) {
+    const context = detectQuestionIntent(question);
+    if (!context.text) return [];
+    const timeText = context.timeframe ? `時間範圍抓「${context.timeframe}」` : "問題裡沒有明確時間範圍，建議心裡先定一段可觀察期間";
+    return [
+      `問題對焦｜你問的是「${context.text}」。系統會把它先讀成「${context.intent.label}」型問題，${timeText}；解讀方式是：${context.intent.readAs}。`,
+      answerForIntent(context, reading, judgement),
+      `優先閱讀｜${focusDimensionsForIntent(context, judgement)}`
+    ];
+  }
+
   function categoryActionPlain(category) {
     const actions = {
       general: "把問題拆成三欄：自己能做的、外部要確認的、正在變動的；先處理最有證據的一欄。",
@@ -1290,11 +1425,12 @@
     return `所在時空為${parts.join("；")}。月建看大環境，日辰看當日力量，時辰看短時間觸發。`;
   }
 
-  function buildPlainSummary(reading, category, title, timeContext, judgementInput) {
+  function buildPlainSummary(reading, category, title, timeContext, judgementInput, question = "") {
     const hexagram = reading.hexagram;
     const changed = reading.changedHexagram;
     const judgement = judgementInput || buildJudgementModel(reading, category, timeContext);
     const extraTimeRisk = timeRiskPlain(reading, timeContext);
+    const questionFocus = question ? buildQuestionFocus(reading, category, question, timeContext, judgement)[1] : "";
     const transition = hexagram.number === changed.number
       ? `${hexagram.fullName}的原局，暫時沒有明顯變卦`
       : `${hexagram.fullName}走向${changed.fullName}`;
@@ -1307,6 +1443,7 @@
       `需要注意｜${riskPlain(reading, category)}換成向度來看，較需要補強的是：${weakest}。`,
       `方向作法｜${nextStepPlain(reading, category)}${categoryActionPlain(category)}`
     ];
+    if (questionFocus) items.splice(1, 0, questionFocus);
     if (extraTimeRisk) items.splice(items.length - 1, 0, extraTimeRisk);
     return items;
   }
@@ -1390,9 +1527,16 @@
       },
       {
         title: "總結",
-        items: buildPlainSummary(reading, category, title, timeContext, judgement)
+        items: buildPlainSummary(reading, category, title, timeContext, judgement, question)
       }
     ];
+
+    if (question) {
+      sections.unshift({
+        title: "問題對焦",
+        items: buildQuestionFocus(reading, category, question, timeContext, judgement)
+      });
+    }
 
     return sections;
   }
