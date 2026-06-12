@@ -65,6 +65,11 @@ button:hover {
   border-color: var(--pine);
 }
 
+button:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
 button.primary {
   border-color: var(--pine);
   background: var(--pine);
@@ -444,6 +449,23 @@ button:focus-visible {
   animation: hex-breathe 0.92s ease both;
 }
 
+.result-panel.casting .summary-grid {
+  position: relative;
+}
+
+.result-panel.casting .summary-grid::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(53, 97, 79, 0.1), transparent);
+  content: "";
+  pointer-events: none;
+  animation: ink-pass 0.72s ease-in-out infinite;
+}
+
+.result-panel.casting .yao-line i {
+  animation: yao-ink 0.72s ease-in-out infinite alternate;
+}
+
 .summary-grid {
   display: grid;
   grid-template-columns: 1.4fr 1fr 0.8fr 0.8fr;
@@ -522,6 +544,23 @@ button:focus-visible {
   background: var(--ink);
 }
 
+.yao-line.pending {
+  opacity: 0.34;
+}
+
+.yao-line.pending i {
+  border: 1px solid rgba(53, 97, 79, 0.38);
+  background: transparent;
+}
+
+.yao-line.fresh i {
+  animation: yao-drop 0.48s ease both;
+}
+
+.stack-row.revealing {
+  animation: row-settle 0.48s ease both;
+}
+
 .yao-line.yang {
   grid-template-columns: 1fr;
   gap: 0;
@@ -545,6 +584,11 @@ button:focus-visible {
   background: var(--cinnabar);
   content: "";
   transform: translateY(-50%);
+}
+
+.casting-block {
+  border-color: rgba(53, 97, 79, 0.28);
+  background: rgba(240, 234, 219, 0.48);
 }
 
 .big-symbol {
@@ -1143,6 +1187,53 @@ tr.is-empty td {
 
   100% {
     transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes yao-drop {
+  0% {
+    transform: translateY(-8px) scaleX(0.82);
+    opacity: 0;
+  }
+
+  58% {
+    transform: translateY(1px) scaleX(1.03);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(0) scaleX(1);
+    opacity: 1;
+  }
+}
+
+@keyframes row-settle {
+  0% {
+    filter: blur(2px);
+  }
+
+  100% {
+    filter: blur(0);
+  }
+}
+
+@keyframes ink-pass {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes yao-ink {
+  0% {
+    opacity: 0.55;
+  }
+
+  100% {
     opacity: 1;
   }
 }

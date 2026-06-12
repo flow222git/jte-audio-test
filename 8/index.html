@@ -31,16 +31,7 @@
           <textarea id="question" rows="4" placeholder="例如：這個合作案接下來三個月的走勢"></textarea>
         </label>
 
-        <label class="field">
-          <span>問事類型</span>
-          <select id="category">
-            <option value="general">總體</option>
-            <option value="career">事業</option>
-            <option value="wealth">財務</option>
-            <option value="relationship">感情</option>
-            <option value="health">健康</option>
-          </select>
-        </label>
+        <input id="category" type="hidden" value="general">
 
         <section class="category-assist" aria-label="系統判斷問題類型">
           <div class="assist-head">
@@ -64,8 +55,8 @@
 
         <section class="time-settings" aria-label="進階時空設定">
           <h2>進階時空</h2>
-          <p>若你知道起卦當下的月建、日辰與時辰，可在這裡填入；工具會加入六神、空亡、月破日破與時空旺衰提示。</p>
-          <button id="autoTime" type="button">用本機時間自動填入</button>
+          <p>進入頁面會先帶入本機日期時間；若你要改用指定起卦時間，也可以在這裡手動調整。</p>
+          <button id="autoTime" type="button">重新帶入本機時間</button>
           <p id="timeAutoNote" class="time-note">日辰依本機公曆日期換算，不需要連網；若採子初換日或遇節氣交界，請手動核對。</p>
           <label class="field compact">
             <span>起卦日期</span>

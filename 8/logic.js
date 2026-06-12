@@ -996,19 +996,19 @@
   }
 
   function scoreStatus(score) {
-    if (score >= 2) return "順勢";
-    if (score >= 1) return "可用";
-    if (score <= -2) return "受阻";
-    if (score <= -1) return "偏弱";
-    return "拉扯";
+    if (score >= 2) return "順勢推進";
+    if (score >= 1) return "可以運用";
+    if (score <= -2) return "先避風險";
+    if (score <= -1) return "先補條件";
+    return "先釐清主線";
   }
 
   function overallTone(score) {
-    if (score >= 2) return "順勢可推";
-    if (score >= 1) return "條件可用";
-    if (score <= -2) return "先守風險";
-    if (score <= -1) return "先穩後動";
-    return "需要拿捏";
+    if (score >= 2) return "順勢推進";
+    if (score >= 1) return "小步推進";
+    if (score <= -2) return "暫緩避險";
+    if (score <= -1) return "先補條件";
+    return "先定主線";
   }
 
   function linePlain(item) {
@@ -1175,7 +1175,7 @@
       return {
         label: "時空助力",
         score: 0,
-        status: "拉扯",
+        status: "先釐清主線",
         summary: "目前未啟用月建、日辰或時辰，所以這一層不參與強弱判斷。",
         advice: "可按本機時間自動填入，再看世爻、應爻、動爻是否得月日扶助或落空受破。"
       };
@@ -1220,7 +1220,7 @@
     return {
       label: config.label,
       score: 0,
-      status: "拉扯",
+      status: "先釐清主線",
       summary: "此向度尚未定義判斷規則。",
       advice: "先回到世應、動爻與用神。"
     };

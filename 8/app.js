@@ -6,6 +6,11 @@
   let currentCasts = null;
   let categoryManuallySet = false;
   let feedbackTimer = null;
+  let castMotionTimer = null;
+  let castMotionToken = 0;
+
+  const CAST_STEP_DELAY = 520;
+  const CAST_FINISH_DELAY = 260;
 
   const QUESTION_PROMPTS = {
     general: [
@@ -175,11 +180,11 @@
     const active = refs.category.value;
     const activeLabel = CATEGORY_ASSIST[active].label;
     if (categoryManuallySet && suggestion.score && suggestion.category !== active) {
-      refs.categoryNote.textContent = `系統猜「${suggestion.label}」，目前手動套用「${activeLabel}」。`;
+      refs.categoryNote.textContent = `目前套用「${activeLabel}」五向度；文字也可判作「${suggestion.label}」。`;
     } else if (suggestion.score) {
-      refs.categoryNote.textContent = `系統判斷偏向「${suggestion.label}」，已套用對應五向度。`;
+      refs.categoryNote.textContent = `已依問題套用「${suggestion.label}」五向度。`;
     } else {
-      refs.categoryNote.textContent = `尚未看出明確類型，先以「${activeLabel}」向度判斷。`;
+      refs.categoryNote.textContent = `先套用「${activeLabel}」五向度；也可以直接點下方按鈕切換。`;
     }
     refs.categoryAssist.innerHTML = Object.entries(CATEGORY_ASSIST).map(([category, meta]) => {
       const classes = ["category-chip"];
@@ -254,7 +259,7 @@
     refs.monthBranch.value = auto.monthBranch;
     refs.dayGanzhi.value = auto.dayGanzhi;
     refs.hourBranch.value = auto.hourBranch;
-    refs.timeAutoNote.textContent = `已用本機時間 ${auto.autoDate} ${auto.autoClock} 自動填入：月建 ${auto.monthBranch}、日辰 ${auto.dayGanzhi}、時辰 ${auto.hourBranch}。${auto.monthApproximation}`;
+    refs.timeAutoNote.textContent = `已帶入本機時間 ${auto.autoDate} ${auto.autoClock}：月建 ${auto.monthBranch}、日辰 ${auto.dayGanzhi}、時辰 ${auto.hourBranch}。${auto.monthApproximation}`;
     rerenderForTimeChange();
   }
 
@@ -287,17 +292,31 @@
     return values;
   }
 
+  function setManualLineValue(index, value) {
+    const select = refs.manualLines.querySelector(`select[data-line-index="${index}"]`);
+    if (select) select.value = String(value);
+  }
+
   function setManualValues(values) {
     refs.manualLines.querySelectorAll("select").forEach((select) => {
       select.value = String(values[Number(select.dataset.lineIndex)]);
     });
   }
 
-  function lineGraphic(bit, moving) {
+  function lineGraphic(bit, moving, extraClass = "") {
     const classes = ["yao-line", bit ? "yang" : "yin"];
     if (moving) classes.push("moving");
+    if (extraClass) classes.push(extraClass);
     return `
       <span class="${classes.join(" ")}" aria-label="${bit ? "陽爻" : "陰爻"}">
+        <i></i><i></i>
+      </span>
+    `;
+  }
+
+  function pendingLineGraphic() {
+    return `
+      <span class="yao-line pending" aria-label="待成之爻">
         <i></i><i></i>
       </span>
     `;
@@ -308,6 +327,46 @@
     refs.mainHexStack.innerHTML = [5, 4, 3, 2, 1, 0].map((index) => {
       return `<div class="stack-row">${lineGraphic(reading.lines[index], movingSet.has(index))}</div>`;
     }).join("");
+  }
+
+  function renderCastingStack(casts = [], activeIndex = -1) {
+    refs.mainHexStack.innerHTML = [5, 4, 3, 2, 1, 0].map((index) => {
+      const cast = casts[index];
+      const line = cast ? JingFang.LINE_VALUES[cast.value] : null;
+      const rowClasses = ["stack-row"];
+      if (index === activeIndex) rowClasses.push("revealing");
+      return `
+        <div class="${rowClasses.join(" ")}">
+          ${line ? lineGraphic(line.bit, line.moving, index === activeIndex ? "fresh" : "") : pendingLineGraphic()}
+        </div>
+      `;
+    }).join("");
+  }
+
+  function prepareCastingView() {
+    currentReading = null;
+    currentCasts = null;
+    renderCastingStack();
+    refs.mainHexName.textContent = "六爻起中";
+    refs.mainHexMeta.textContent = "自初爻而上，逐爻成卦";
+    refs.changedSymbol.textContent = "-";
+    refs.changedHexName.textContent = "待六爻落定";
+    refs.changedHexMeta.textContent = "完成後顯示變卦";
+    refs.palaceName.textContent = "待定";
+    refs.palaceMeta.textContent = "完成後判定八宮";
+    refs.worldResponse.textContent = "待定";
+    refs.movingMeta.textContent = "正在取爻";
+    refs.readingContent.innerHTML = `
+      <section class="reading-block casting-block">
+        <h3>起卦中</h3>
+        <p>三錢逐次落下，六爻由初爻往上成形。六爻落定後，才會正式排出本卦、變卦與解讀。</p>
+      </section>
+    `;
+    refs.lineTable.innerHTML = "";
+    refs.advancedSummary.innerHTML = "";
+    refs.advancedTable.innerHTML = "";
+    refs.hiddenSummary.innerHTML = "";
+    refs.hiddenTable.innerHTML = "";
   }
 
   function renderSummary(reading) {
@@ -329,9 +388,9 @@
 
   function toneClass(value) {
     if (value.includes("順勢")) return "tone-good";
-    if (value.includes("可用")) return "tone-okay";
-    if (value.includes("受阻") || value.includes("守風險")) return "tone-risk";
-    if (value.includes("偏弱") || value.includes("穩後動")) return "tone-caution";
+    if (value.includes("可用") || value.includes("可以") || value.includes("小步")) return "tone-okay";
+    if (value.includes("風險") || value.includes("避險") || value.includes("暫緩")) return "tone-risk";
+    if (value.includes("補條件")) return "tone-caution";
     return "tone-neutral";
   }
 
@@ -611,22 +670,81 @@
     }, 1800);
   }
 
+  function setCastBusy(isBusy) {
+    refs.cast.disabled = isBusy;
+    refs.readManual.disabled = isBusy;
+    refs.resultPanel.classList.toggle("casting", isBusy);
+  }
+
+  function runCastMotion(startMessage, complete) {
+    window.clearTimeout(castMotionTimer);
+    const token = ++castMotionToken;
+    setCastBusy(true);
+    showCastFeedback(startMessage);
+    castMotionTimer = window.setTimeout(() => {
+      if (token !== castMotionToken) return;
+      complete();
+      setCastBusy(false);
+    }, 520);
+  }
+
+  function runCoinSequence(casts, complete) {
+    window.clearTimeout(castMotionTimer);
+    const token = ++castMotionToken;
+    const partialCasts = Array(6).fill(null);
+    setCastBusy(true);
+    prepareCastingView();
+    showCastFeedback("三錢入手，初爻將起...");
+
+    const revealLine = (index) => {
+      if (token !== castMotionToken) return;
+      if (index >= casts.length) {
+        castMotionTimer = window.setTimeout(() => {
+          if (token !== castMotionToken) return;
+          complete();
+          setCastBusy(false);
+        }, CAST_FINISH_DELAY);
+        return;
+      }
+
+      const cast = casts[index];
+      const line = JingFang.LINE_VALUES[cast.value];
+      partialCasts[index] = cast;
+      setManualLineValue(index, cast.value);
+      renderCastingStack(partialCasts, index);
+      showCastFeedback(`${JingFang.LINE_LABELS[index]}落定：${JingFang.coinText(cast.coins)}｜${cast.value} ${line.label}`);
+      castMotionTimer = window.setTimeout(() => revealLine(index + 1), CAST_STEP_DELAY);
+    };
+
+    castMotionTimer = window.setTimeout(() => revealLine(0), 260);
+  }
+
   function castAndRender() {
     applySuggestedCategory();
-    currentCasts = JingFang.castCoins();
-    const values = currentCasts.map((cast) => cast.value);
-    setManualValues(values);
-    const reading = JingFang.analyze(values);
-    renderAll(reading);
-    showCastFeedback(`卦已成：${reading.hexagram.fullName}`);
+    const casts = JingFang.castCoins();
+    runCoinSequence(casts, () => {
+      currentCasts = casts;
+      const values = casts.map((cast) => cast.value);
+      setManualValues(values);
+      const reading = JingFang.analyze(values);
+      renderAll(reading);
+      showCastFeedback(`六爻成卦：${reading.hexagram.fullName}`);
+    });
   }
 
   function readManualAndRender(options = {}) {
     applySuggestedCategory();
-    currentCasts = null;
-    const reading = JingFang.analyze(getManualValues());
-    renderAll(reading);
-    if (!options.silent) showCastFeedback(`已套用：${reading.hexagram.fullName}`);
+    const complete = () => {
+      currentCasts = null;
+      const reading = JingFang.analyze(getManualValues());
+      renderAll(reading);
+      if (!options.silent) showCastFeedback(`已套用：${reading.hexagram.fullName}`);
+    };
+    if (options.silent) {
+      complete();
+      return;
+    }
+    runCastMotion("六爻排入卦盤...", complete);
   }
 
   function bindEvents() {
@@ -667,6 +785,7 @@
     renderQuestionPrompts();
     renderCategoryAssist();
     bindEvents();
+    applyAutoTime();
     setManualValues([7, 8, 7, 8, 7, 8]);
     readManualAndRender({ silent: true });
   });
