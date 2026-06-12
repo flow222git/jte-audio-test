@@ -238,6 +238,14 @@
   }
 
   function getTimeContext() {
+    if (!refs.monthBranch.value && !refs.dayGanzhi.value && !refs.hourBranch.value) {
+      const auto = JingFang.autoTimeContextForDate(new Date());
+      refs.castDate.value = auto.autoDate;
+      refs.monthBranch.value = auto.monthBranch;
+      refs.dayGanzhi.value = auto.dayGanzhi;
+      refs.hourBranch.value = auto.hourBranch;
+      refs.timeAutoNote.textContent = `已自動補入本機時間 ${auto.autoDate} ${auto.autoClock}：月建 ${auto.monthBranch}、日辰 ${auto.dayGanzhi}、時辰 ${auto.hourBranch}。`;
+    }
     return JingFang.buildTimeContext({
       monthBranch: refs.monthBranch.value,
       dayGanzhi: refs.dayGanzhi.value,
