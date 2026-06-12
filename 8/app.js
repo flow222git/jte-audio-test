@@ -4,6 +4,8 @@
   const refs = {};
   let currentReading = null;
   let currentCasts = null;
+  let categoryManuallySet = false;
+  let feedbackTimer = null;
 
   const QUESTION_PROMPTS = {
     general: [
@@ -33,6 +35,34 @@
     ]
   };
 
+  const CATEGORY_ASSIST = {
+    general: {
+      label: "總體",
+      dimensions: ["自己與外部", "變化速度", "核心用神", "暗線伏神", "時空助力"],
+      keywords: ["整體", "總體", "選擇", "方向", "走勢", "阻力", "機會", "風險", "下一步", "怎麼辦"]
+    },
+    career: {
+      label: "事業",
+      dimensions: ["責任與職位", "制度與文件", "成果輸出", "外部配合", "時空落點"],
+      keywords: ["工作", "事業", "職涯", "職場", "合作", "合作案", "專案", "主管", "老闆", "同事", "客戶", "面試", "升遷", "離職", "轉職", "合約", "提案"]
+    },
+    wealth: {
+      label: "財務",
+      dimensions: ["財源與資源", "產出與客源", "競爭與消耗", "暗財與缺位", "時空落點"],
+      keywords: ["財", "錢", "收入", "投資", "支出", "成本", "預算", "資金", "匯款", "借款", "貸款", "獲利", "賺", "薪水", "股", "股票", "報價", "落袋", "開源", "控成本"]
+    },
+    relationship: {
+      label: "感情",
+      dimensions: ["自己與對方", "關係角色", "互動變化", "未說出口", "時空氣氛"],
+      keywords: ["感情", "關係", "對方", "伴侶", "曖昧", "復合", "分手", "婚姻", "桃花", "告白", "相處", "溝通", "喜歡", "愛情", "男友", "女友"]
+    },
+    health: {
+      label: "健康",
+      dimensions: ["壓力病象", "舒緩復原", "照護保護", "變化警訊", "時空助力"],
+      keywords: ["健康", "身體", "生病", "病", "痛", "壓力", "睡眠", "失眠", "醫", "檢查", "復原", "休養", "身心", "疲勞", "焦慮", "不舒服"]
+    }
+  };
+
   function qs(id) {
     return document.getElementById(id);
   }
@@ -40,8 +70,12 @@
   function initRefs() {
     [
       "question",
+      "categoryAssist",
+      "categoryNote",
       "questionPrompts",
       "category",
+      "resultPanel",
+      "castNotice",
       "monthBranch",
       "dayGanzhi",
       "castDate",
@@ -117,11 +151,85 @@
     `).join("");
   }
 
+  function classifyQuestion(value) {
+    const text = String(value || "").trim();
+    const scores = Object.entries(CATEGORY_ASSIST).map(([category, meta]) => {
+      const matched = meta.keywords.filter((keyword) => text.includes(keyword));
+      return {
+        category,
+        label: meta.label,
+        score: matched.reduce((sum, keyword) => sum + Math.max(1, Math.min(3, keyword.length - 1)), 0),
+        matched
+      };
+    });
+    const ranked = scores.sort((a, b) => b.score - a.score);
+    const best = ranked[0];
+    if (!text || !best || best.score === 0) {
+      return { category: "general", label: CATEGORY_ASSIST.general.label, score: 0, matched: [] };
+    }
+    return best;
+  }
+
+  function renderCategoryAssist() {
+    const suggestion = classifyQuestion(refs.question.value);
+    const active = refs.category.value;
+    const activeLabel = CATEGORY_ASSIST[active].label;
+    if (categoryManuallySet && suggestion.score && suggestion.category !== active) {
+      refs.categoryNote.textContent = `系統猜「${suggestion.label}」，目前手動套用「${activeLabel}」。`;
+    } else if (suggestion.score) {
+      refs.categoryNote.textContent = `系統判斷偏向「${suggestion.label}」，已套用對應五向度。`;
+    } else {
+      refs.categoryNote.textContent = `尚未看出明確類型，先以「${activeLabel}」向度判斷。`;
+    }
+    refs.categoryAssist.innerHTML = Object.entries(CATEGORY_ASSIST).map(([category, meta]) => {
+      const classes = ["category-chip"];
+      if (category === active) classes.push("active");
+      if (category === suggestion.category && suggestion.score) classes.push("suggested");
+      return `
+        <button class="${classes.join(" ")}" type="button" data-category="${category}">
+          <span>${escapeHtml(meta.label)}</span>
+          <small>${escapeHtml(meta.dimensions.join("、"))}</small>
+        </button>
+      `;
+    }).join("");
+  }
+
+  function applySuggestedCategory() {
+    const suggestion = classifyQuestion(refs.question.value);
+    if (!categoryManuallySet && refs.category.value !== suggestion.category) {
+      refs.category.value = suggestion.category;
+      renderQuestionPrompts();
+    }
+    renderCategoryAssist();
+  }
+
+  function setCategory(category, manual = true) {
+    if (!CATEGORY_ASSIST[category]) return;
+    categoryManuallySet = manual;
+    refs.category.value = category;
+    renderQuestionPrompts();
+    renderCategoryAssist();
+    if (currentReading) {
+      renderReading(currentReading);
+      renderLineTable(currentReading);
+      renderAdvancedPanel(currentReading);
+      renderHiddenPanel(currentReading);
+    }
+  }
+
   function applyQuestionPrompt(event) {
     const button = event.target.closest("button[data-prompt]");
     if (!button) return;
+    categoryManuallySet = false;
     refs.question.value = button.dataset.prompt;
+    applySuggestedCategory();
     if (currentReading) renderReading(currentReading);
+  }
+
+  function applyCategoryChip(event) {
+    const button = event.target.closest("button[data-category]");
+    if (!button) return;
+    setCategory(button.dataset.category);
   }
 
   function getTimeContext() {
@@ -238,6 +346,7 @@
 
   function renderJudgementOverview(reading, timeContext) {
     const category = refs.category.value;
+    const categoryMeta = CATEGORY_ASSIST[category] || CATEGORY_ASSIST.general;
     const judgement = JingFang.buildJudgementModel(reading, category, timeContext);
     const summary = JingFang.buildInterpretation(reading, {
       question: refs.question.value,
@@ -269,6 +378,11 @@
             <b>優先留意</b>
             <span>${escapeHtml(risks)}</span>
           </div>
+        </div>
+
+        <div class="applied-dimensions">
+          <b>已套用「${escapeHtml(categoryMeta.label)}」五向度</b>
+          <span>${escapeHtml(categoryMeta.dimensions.join("、"))}</span>
         </div>
 
         <div class="dimension-grid">
@@ -483,32 +597,48 @@
     renderModelContent();
   }
 
+  function showCastFeedback(message) {
+    window.clearTimeout(feedbackTimer);
+    refs.castNotice.textContent = message;
+    refs.castNotice.classList.remove("show");
+    refs.resultPanel.classList.remove("result-flash");
+    void refs.castNotice.offsetWidth;
+    refs.castNotice.classList.add("show");
+    refs.resultPanel.classList.add("result-flash");
+    feedbackTimer = window.setTimeout(() => {
+      refs.castNotice.classList.remove("show");
+      refs.resultPanel.classList.remove("result-flash");
+    }, 1800);
+  }
+
   function castAndRender() {
+    applySuggestedCategory();
     currentCasts = JingFang.castCoins();
     const values = currentCasts.map((cast) => cast.value);
     setManualValues(values);
-    renderAll(JingFang.analyze(values));
+    const reading = JingFang.analyze(values);
+    renderAll(reading);
+    showCastFeedback(`卦已成：${reading.hexagram.fullName}`);
   }
 
-  function readManualAndRender() {
+  function readManualAndRender(options = {}) {
+    applySuggestedCategory();
     currentCasts = null;
-    renderAll(JingFang.analyze(getManualValues()));
+    const reading = JingFang.analyze(getManualValues());
+    renderAll(reading);
+    if (!options.silent) showCastFeedback(`已套用：${reading.hexagram.fullName}`);
   }
 
   function bindEvents() {
+    refs.categoryAssist.addEventListener("click", applyCategoryChip);
     refs.questionPrompts.addEventListener("click", applyQuestionPrompt);
     refs.cast.addEventListener("click", castAndRender);
     refs.readManual.addEventListener("click", readManualAndRender);
     refs.category.addEventListener("change", () => {
-      renderQuestionPrompts();
-      if (currentReading) {
-        renderReading(currentReading);
-        renderLineTable(currentReading);
-        renderAdvancedPanel(currentReading);
-        renderHiddenPanel(currentReading);
-      }
+      setCategory(refs.category.value);
     });
     refs.question.addEventListener("input", () => {
+      applySuggestedCategory();
       if (currentReading) renderReading(currentReading);
     });
     [refs.monthBranch, refs.dayGanzhi, refs.hourBranch].forEach((select) => {
@@ -535,8 +665,9 @@
     renderManualInputs();
     renderTimeInputs();
     renderQuestionPrompts();
+    renderCategoryAssist();
     bindEvents();
     setManualValues([7, 8, 7, 8, 7, 8]);
-    readManualAndRender();
+    readManualAndRender({ silent: true });
   });
 })();

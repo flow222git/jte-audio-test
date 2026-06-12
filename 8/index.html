@@ -42,6 +42,14 @@
           </select>
         </label>
 
+        <section class="category-assist" aria-label="系統判斷問題類型">
+          <div class="assist-head">
+            <h2>系統判斷</h2>
+            <span id="categoryNote">輸入問題後會自動判斷類型。</span>
+          </div>
+          <div id="categoryAssist" class="category-assist-grid"></div>
+        </section>
+
         <section class="question-seeds" aria-label="問法模板">
           <h2>問法模板</h2>
           <div id="questionPrompts" class="question-prompts"></div>
@@ -80,7 +88,8 @@
         <div class="manual-lines" id="manualLines" aria-label="手動六爻"></div>
       </aside>
 
-      <section class="result-panel">
+      <section id="resultPanel" class="result-panel">
+        <div id="castNotice" class="cast-notice" aria-live="polite"></div>
         <div class="summary-grid">
           <article class="hex-card primary-hex">
             <div class="hex-stack" id="mainHexStack"></div>
