@@ -12,8 +12,7 @@
 
   // —— 開放名單（小寫比對；要開放給誰就加在這裡）——
   var ALLOW = [
-    "simon@medialand.tw",      // 使用者指定可先用的帳號
-    "flow@jointoenjoy.com"     // 平台擁有者（避免把自己鎖在外面）
+    "simon@medialand.tw"       // 目前唯一開放帳號（要加人就加在這個陣列）
   ];
 
   var CLIENT_ID = "1052529942242-jvr7ik3f7r987l5lq889nrfkjheoovg7.apps.googleusercontent.com";
