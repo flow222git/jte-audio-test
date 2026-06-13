@@ -5,8 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>京房八宮起卦</title>
   <link rel="stylesheet" href="style.css">
+  <!-- 練息場平台 Google 登入 SDK（供登入閘門使用）-->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
+  <!-- 登入閘門：暫不公開，僅開放名單帳號可用（進站立刻蓋遮罩，驗證通過才掀開）-->
+  <script src="auth-gate.js"></script>
   <main class="shell">
     <header class="app-header">
       <div class="brand-copy">
@@ -201,5 +205,7 @@
 
   <script src="logic.js"></script>
   <script src="app.js"></script>
+  <!-- 練息場全平台共用使用者列（回首頁＋登入資訊／登出）-->
+  <script defer src="https://flow222git.github.io/jte-platform-2026/jte-userbar.js"></script>
 </body>
 </html>

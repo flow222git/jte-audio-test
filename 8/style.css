@@ -84,7 +84,7 @@ button.primary:hover {
   position: relative;
   width: min(1440px, 100%);
   margin: 0 auto;
-  padding: 24px;
+  padding: 50px 24px 24px; /* 上方留白：避開全平台固定 userbar */
 }
 
 .app-header {
@@ -1331,7 +1331,7 @@ tr.is-empty td {
 
 @media (max-width: 720px) {
   .shell {
-    padding: 14px;
+    padding: 44px 14px 14px; /* 上方留白：避開固定 userbar */
   }
 
   .app-header {
